@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>高梓括《高级网页设计》课堂实践</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --blue: #173d7a;
+      --blue-light: #6ba4ff;
+      --blue-deep: #102a56;
+      --blue-soft: #eef5ff;
+      --text: #1e3149;
+      --muted: #66738a;
+      --line: #ccd8ee;
+      --card: #eef5ff;
+      --shadow: rgba(0, 0, 0, 0.12);
+      --gold: #ffd789;
+      --cream: #fffaf3;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "Arial", "Helvetica", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 76% 11%, rgba(132, 167, 255, 0.26), transparent 15%), radial-gradient(circle at 20% 85%, rgba(105, 209, 248, 0.20), transparent 17%), linear-gradient(135deg, #eef4ff, #dceaff, #f7faff);
+      min-height: 100vh;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 2px dashed rgba(23, 61, 122, 0.45);
+      filter: blur(.2px);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    body::before { left: 30px; top: 60px; }
+    body::after { right: 40px; bottom: 80px; border-color: rgba(24, 136, 190, 0.45); }
+
+    .page {
+      width: min(1280px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 30px 0 80px;
+    }
+
+    .dashboard {
+      display: flex;
+      min-height: 650px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 22px;
+      box-shadow: 0 20px 40px var(--shadow);
+      border: 1px solid rgba(255,255,255,0.9);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--blue-deep);
+      color: #fff;
+      padding: 28px 24px;
+      position: relative;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #fff3dc);
+      color: var(--blue-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 900;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .brand-title { display: flex; flex-direction: column; gap: 4px; }
+    .brand-title .brand-cn { font-weight: 800; font-size: 22px; letter-spacing: 1px; }
+    .brand-title .brand-en { font-size: 12px; color: #c5daff; letter-spacing: 1.5px; text-transform: uppercase; }
+
+    .profile {
+      margin-top: 50px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 22px 16px;
+      border: 1px solid rgba(255,255,255,0.18);
+      backdrop-filter: blur(3px);
+    }
+
+    .profile-head { display: flex; align-items: center; gap: 12px; }
+    .profile-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      border: 2px solid #fff;
+    }
+
+    .profile-name { font-size: 18px; font-weight: 800; color: #fff; }
+    .profile-role { display: block; font-size: 11px; color: #c5daff; margin-top: 4px; letter-spacing: 1px; }
+
+    .profile-meta { margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.24); padding-top: 14px; }
+    .profile-meta div { display: flex; justify-content: space-between; align-items: center; color: #dceaff; font-size: 12px; margin: 8px 0; }
+    .profile-meta .value { color: var(--gold); font-weight: 700; }
+
+    .menu-title { color: var(--gold); font-weight: 700; font-size: 12px; letter-spacing: 2px; margin: 32px 0 14px; text-transform: uppercase; }
+
+    .side-menu { list-style: none; padding: 0; margin: 0; }
+    .side-menu li { margin: 10px 0; }
+    .side-menu a {
+      color: #dceaff;
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+    .side-menu a::before { content: "✦"; color: var(--gold); font-size: 12px; }
+    .side-menu a:hover,
+    .side-menu .active a { background: var(--blue-light); color: #fff; }
+
+    .sidebar-footer { position: absolute; left: 24px; bottom: 26px; color: #adc6f8; font-size: 12px; letter-spacing: 1px; }
+
+    .main {
+      flex: 1;
+      padding: 30px 34px;
+      background: var(--cream);
+      position: relative;
+    }
+
+    .main::before {
+      content: "";
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      right: -45px;
+      top: -30px;
+      background-image: radial-gradient(var(--line) 1px, transparent 1px);
+      background-size: 14px 14px;
+      opacity: 0.9;
+    }
+
+    .main-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: relative; z-index: 1; }
+    .breadcrumb { color: var(--muted); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+    .breadcrumb strong { color: var(--blue); }
+
+    .top-tools { display: flex; align-items: center; gap: 10px; }
+    .tool-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .page-title { position: relative; z-index: 1; padding: 28px 0 16px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+    .page-title .tag { display: inline-block; padding: 4px 12px; background: var(--blue); color: #fff; border-radius: 20px; font-size: 12px; letter-spacing: 1px; margin-bottom: 10px; }
+    .page-title h1 { margin: 0 0 8px; font-size: clamp(34px, 3vw, 44px); color: var(--blue-deep); letter-spacing: 1px; }
+    .page-title p { margin: 0; color: var(--muted); line-height: 1.8; font-size: 14px; }
+
+    .intro-section {
+      position: relative;
+      z-index: 1;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .intro-section .intro-text { flex: 2; }
+    .intro-section .intro-text h2 { color: var(--blue); margin: 0 0 10px; font-size: 26px; }
+    .intro-section .intro-text p { color: var(--muted); line-height: 1.8; font-size: 14px; margin: 0; }
+
+    .intro-image {
+      flex: 1;
+      min-width: 180px;
+      height: 160px;
+      background: linear-gradient(135deg, rgba(23,61,122,0.1), transparent), radial-gradient(circle at center, var(--blue-light), var(--blue));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 50px;
+      box-shadow: inset 0 0 14px rgba(255,255,255,0.6);
+      border: 4px solid #fff;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 14px;
+      margin: 20px 0 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-item {
+      background: var(--blue-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100px;
+    }
+
+    .stat-item .icon { font-size: 24px; color: var(--blue); margin-bottom: 8px; }
+    .stat-item .num { font-size: 24px; font-weight: 800; color: var(--blue-deep); }
+    .stat-item .label { margin-top: 4px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 22px 0 12px; position: relative; z-index: 1; }
+    .section-head h2 { margin: 0; color: var(--blue-deep); font-size: 24px; }
+    .section-head .section-button { color: var(--blue); border: 1px solid var(--blue); background: #fff; border-radius: 12px; padding: 8px 14px; font-weight: 700; font-size: 12px; text-decoration: none; }
+
+    .assignment-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .assignment-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .assignment-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(23,61,122,0.1); }
+    .assignment-card .assign-number { width: 40px; height: 40px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 16px; }
+    .assignment-card .assign-text { flex: 1; }
+    .assignment-card .assign-text .title { display: block; font-weight: 800; font-size: 16px; color: var(--blue-deep); }
+    .assignment-card .assign-text .desc { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    .assign-status { border-radius: 20px; padding: 6px 12px; font-size: 11px; font-weight: 700; background: var(--blue-soft); color: var(--blue); border: 1px solid var(--line); white-space: nowrap; }
+
+    .link-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .page-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      transition: transform 0.25s, box-shadow 0.25s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+    }
+
+    .page-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(23,61,122,0.14); }
+    .page-card .page-card-icon { width: 44px; height: 44px; background: var(--blue); border-radius: 50%; color: #fff; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+    .page-card .page-card-text { flex: 1; }
+    .page-card a { color: var(--blue); font-weight: 800; font-size: 16px; text-decoration: none; }
+    .page-card a:hover { color: var(--blue-deep); text-decoration: underline; }
+    .page-card .desc { font-size: 12px; color: var(--muted); margin-top: 7px; line-height: 1.7; }
+
+    .prompt-box {
+      position: relative;
+      z-index: 1;
+      margin-top: 22px;
+      padding: 20px 22px;
+      background: var(--blue-deep);
+      color: #fff;
+      border-left: 5px solid var(--gold);
+      border-radius: 12px;
+      line-height: 1.9;
+      font-size: 14px;
+    }
+
+    .footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding-top: 20px;
+      margin-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    @media (max-width: 940px) {
+      .dashboard { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .sidebar-footer { position: relative; left: auto; bottom: auto; margin-top: 24px; }
+      .stats-grid, .assignment-list, .link-grid { grid-template-columns: 1fr; }
+      .intro-section { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="dashboard">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-icon">高</span>
+          <span class="brand-title">
+            <span class="brand-cn">高级网页设计</span>
+            <span class="brand-en">Web Design Course</span>
+          </span>
+        </div>
+
+        <section class="profile">
+          <div class="profile-head">
+            <span class="profile-avatar">高</span>
+            <span>
+              <span class="profile-name">高梓括</span>
+              <span class="profile-role">课堂实践</span>
+            </span>
+          </div>
+
+          <div class="profile-meta">
+            <div><span>课程</span><span class="value">网页设计</span></div>
+            <div><span>班级</span><span class="value">计算机24010</span></div>
+            <div><span>学号</span><span class="value">24001011019</span></div>
+          </div>
+        </section>
+
+        <div class="menu-title">课程导航</div>
+        <ul class="side-menu">
+          <li class="active"><a href="#">课程介绍</a></li>
+          <li><a href="#">作业列表</a></li>
+          <li><a href="#">目录卡片</a></li>
+          <li><a href="#">资源下载</a></li>
+        </ul>
+
+        <div class="sidebar-footer">2026 · 高级网页设计</div>
+      </aside>
+
+      <main class="main">
+        <section class="main-top">
+          <div class="breadcrumb"><strong>首页</strong> / 课程实践</div>
+          <div class="top-tools">
+            <span class="tool-icon">☻</span>
+            <span class="tool-icon">☍</span>
+          </div>
+        </section>
+
+        <section class="page-title">
+          <span class="tag">课程作品集</span>
+          <h1>高梓括的《高级网页设计》课堂实践</h1>
+          <p>HTML、CSS 与网页布局实践</p>
+        </section>
+
+        <section class="intro-section">
+          <div class="intro-text">
+            <h2>课程介绍</h2>
+            <p>本课程围绕网页结构、CSS 样式、元素布局、列表排版与页面美化展开实践。通过综合练习，逐步掌握 HTML 与 CSS 的原生实现方式，完成一份课程作业展示页面。</p>
+          </div>
+          <div class="intro-image">✎</div>
+        </section>
+
+        <section class="stats-grid">
+          <div class="stat-item">
+            <span class="icon">📄</span>
+            <span class="num">01</span>
+            <span class="label">网页作业</span>
+          </div>
+          <div class="stat-item">
+            <span class="icon">🎨</span>
+            <span class="num">CSS</span>
+            <span class="label">样式技术</span>
+          </div>
+          <div class="stat-item">
+            <span class="icon">📚</span>
+            <span class="num">03</span>
+            <span class="label">知识点</span>
+          </div>
+          <div class="stat-item">
+            <span class="icon">📅</span>
+            <span class="num">2026</span>
+            <span class="label">课堂实践</span>
+          </div>
+        </section>
+
+        <section class="section-head">
+          <h2>作业列表</h2>
+          <a class="section-button" href="#">查看全部</a>
+        </section>
+
+        <section class="assignment-list">
+          <article class="assignment-card">
+            <span class="assign-number">01</span>
+            <span class="assign-text">
+              <span class="title">基础页面布局</span>
+              <span class="desc">CSS 页面盒模型与结构排版</span>
+            </span>
+            <span class="assign-status">已完成</span>
+          </article>
+
+          <article class="assignment-card">
+            <span class="assign-number">02</span>
+            <span class="assign-text">
+              <span class="title">选择器与样式练习</span>
+              <span class="desc">群组选择器与后代选择器</span>
+            </span>
+            <span class="assign-status">已完成</span>
+          </article>
+
+          <article class="assignment-card">
+            <span class="assign-number">03</span>
+            <span class="assign-text">
+              <span class="title">作业导航首页</span>
+              <span class="desc">课程网页目录与内容展示</span>
+            </span>
+            <span class="assign-status">实践中</span>
+          </article>
+
+          <article class="assignment-card">
+            <span class="assign-number">04</span>
+            <span class="assign-text">
+              <span class="title">课堂实践综合展示</span>
+              <span class="desc">网页设计作品汇总</span>
+            </span>
+            <span class="assign-status">新建</span>
+          </article>
+        </section>
+
+        <section class="section-head">
+          <h2>目录卡片</h2>
+        </section>
+
+        <section class="link-grid">
+          <article class="page-card">
+            <span class="page-card-icon">📘</span>
+            <span class="page-card-text">
+              <a href="3-3.html">3-3.html</a>
+              <span class="desc">CSS 基础练习：群组选择器与后代选择器。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">📗</span>
+            <span class="page-card-text">
+              <a href="3-4.html">3-4.html</a>
+              <span class="desc">页面结构与文字样式练习。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">📙</span>
+            <span class="page-card-text">
+              <a href="3-5%20盒模型.html">3-5 盒模型.html</a>
+              <span class="desc">盒模型布局与边距练习。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">📕</span>
+            <span class="page-card-text">
+              <a href="3-6.html">3-6.html</a>
+              <span class="desc">网页排版与列表样式练习。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">📔</span>
+            <span class="page-card-text">
+              <a href="3-7.html">3-7.html</a>
+              <span class="desc">CSS 组件与卡片布局实践。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">🖼️</span>
+            <span class="page-card-text">
+              <a href="3-8.html">3-8.html</a>
+              <span class="desc">图片标题组合展示效果。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">📰</span>
+            <span class="page-card-text">
+              <a href="3-9.html">3-9.html</a>
+              <span class="desc">图文列表页面与信息排版。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">📚</span>
+            <span class="page-card-text">
+              <a href="3-10.html">3-10.html</a>
+              <span class="desc">后续作业页面与内容扩展。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">🧩</span>
+            <span class="page-card-text">
+              <a href="3-11.html">3-11.html</a>
+              <span class="desc">图片联动与 hover 特效演示页面。</span>
+            </span>
+          </article>
+
+          <article class="page-card">
+            <span class="page-card-icon">🏠</span>
+            <span class="page-card-text">
+              <a href="index.html">index.html</a>
+              <span class="desc">课程实践首页：目录导航与作业展示。</span>
+            </span>
+          </article>
+
+        </section>
+
+        <div class="footer">
+          高梓括 · 《高级网页设计》课堂实践 · 2026
+        </div>
+      </main>
+    </section>
+  </div>
+</body>
+</html>

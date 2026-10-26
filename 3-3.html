@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1019高梓括</title>
+    <style>
+        h2,h3,p{
+            padding : 0;
+            margin : 0;
+        }/*群组选择器*/
+
+        /* 2. h2 黑底白字 */
+        h2{
+            background: #000;
+            color: #fff;
+            text-align: center;
+            line-height: 150%;
+        }
+
+        #box {
+            padding: 8px;
+            margin: 20px;
+            border: 1px solid #000;
+            font-size: 12px;
+            /* 宽度 */
+            width: 300px;
+        }
+
+        #box h3{
+            font-size: 16px;
+            line-height: 33px;
+            text-align: center;
+            color: #00f;
+            letter-spacing: 3px;
+        }
+
+        #box p{
+            color: #666;
+            text-indent: 2em;
+            line-height: 150%;
+        }
+
+        /* 1. 学号、姓名、班级的值：蓝色加粗，用1个选择器 */
+        #box p span{
+            color: #00f;
+            font-weight: bold;
+        }
+
+        #box a{
+            color: #00f;
+            text-decoration: none;
+        }
+
+        /* 3. 知识点的值：蓝底白字 */
+        .knowledge{
+            background: #00f;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h2>css群组选择器和后代选择器</h2>
+    <div id="box">
+        <h3>css进阶</h3>
+        <p>
+            学号：<span>24001011019</span>，
+            姓名：<span>高梓括</span>，
+            班级：<span>计算机24010</span>，
+            《高级网页设计》设计的学习难度：困难
+        </p>
+        本实例的知识点：<span class="knowledge">css群组选择器和后代选择器</span>。
+        <a href="#">【更多】</a>
+    </div>
+</body>
+</html>

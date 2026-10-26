@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.2">
+  <title>高梓括 · 响应式盒子布局</title>
+  <style>
+    :root {
+      --page-bg: #5b6cff;
+      --text-color: #fff;
+      --muted-color: rgba(255, 255, 255, 0.82);
+      --content-width: 72rem;
+      --box-gap: 1rem;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-width: 20rem;
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 2rem;
+      background: var(--page-bg);
+      color: var(--text-color);
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      transition: background-color 0.6s ease;
+    }
+
+    .viewport {
+      width: min(100%, var(--content-width));
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .viewport h1 {
+      margin: 0;
+      font-size: clamp(2rem, 8vw, 5rem);
+      line-height: 1.1;
+      letter-spacing: 0.08em;
+    }
+
+    .viewport > p {
+      max-width: 38rem;
+      margin: 1rem auto 1.5rem;
+      color: var(--muted-color);
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+
+    .box-grid {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: var(--box-gap);
+    }
+
+    .box {
+      min-height: 8rem;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 1rem;
+      background: rgba(0, 0, 0, 0.14);
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.12);
+    }
+
+    @media (min-width: 40rem) {
+      :root {
+        --page-bg: #9b5cff;
+      }
+
+      body { padding: 3rem; }
+      .box-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (min-width: 64rem) {
+      :root {
+        --page-bg: #ff8a3d;
+      }
+
+      body { padding: 4rem; }
+      .box-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (min-width: 90rem) {
+      :root {
+        --page-bg: #22b87a;
+      }
+
+      .box-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="viewport">
+    <h1>高梓括</h1>
+    <p>视口变化时，媒体查询会改变每行显示的盒子数量。</p>
+
+    <section class="box-grid" aria-label="响应式盒子布局">
+      <div class="box">盒子 01</div>
+      <div class="box">盒子 02</div>
+      <div class="box">盒子 03</div>
+      <div class="box">盒子 04</div>
+      <div class="box">盒子 05</div>
+      <div class="box">盒子 06</div>
+      <div class="box">盒子 07</div>
+      <div class="box">盒子 08</div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1019 高梓括</title>
+    <style>
+        /*全局css*/
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        img{
+            display: block;
+        }
+        ul,ol{list-style: none;}
+        .tlist{
+            display: flex;
+            flex-wrap: wrap;/*让子元素换行*/
+            margin: 4px;
+        }
+        .tlist li{ 
+            width:30%;
+            margin: 3px;
+            flex-grow: 2;/*让盒子等分*/
+            overflow: hidden;
+            position: relative;
+        }
+        .tlist a{
+            display: block;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+        }
+        .tlist img{
+            width: 100%;
+            transition: all 0.5s ease;   /*过渡效果*/
+        }
+        .text{ 
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0,0,0,0.5);
+            color: #fff;
+            transition: all 0.5s ease;   /*过渡效果*/
+            height: 33px;
+            overflow: hidden;
+            font-size:12px;
+        }
+        .text h3{
+            height:33px;
+            line-height: 33px;
+            text-align: center;
+        }
+        .text p{
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+            padding: 0 8px 8px;
+            line-height: 1.6;
+        }
+        .tlist li:hover .text{
+            height: 120px;
+        }
+        .tlist li:hover .text p{
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .tlist a:hover img{
+            transform: scale(1.7);/*让图片放大*/
+        }
+        .tlist li:nth-child(3n+1):hover img{
+            transform: scale(1.7);/*让图片放大*/
+        }
+    </style>
+</head>
+<body>
+    <h2>transition 过渡</h2>
+    <ul class="tlist">
+        <li>
+            <a href="https://example.com/1" target="_blank">
+                <img src="../img/4.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/2" target="_blank">
+                <img src="../img/5.jpg.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/3" target="_blank">
+                <img src="../img/6.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/4" target="_blank">
+                <img src="../img/7.jpg.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/5" target="_blank">
+                <img src="../img/8.jpg.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/6" target="_blank">
+                <img src="../img/9.jpg.png">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/7" target="_blank">
+                <img src="../img/4.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/8" target="_blank">
+                <img src="../img/5.jpg.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/9" target="_blank">
+                <img src="../img/6.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/10" target="_blank">
+                <img src="../img/7.jpg.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/11" target="_blank">
+                <img src="../img/8.jpg.jpg">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+         <li>
+            <a href="https://example.com/12" target="_blank">
+                <img src="../img/9.jpg.png">
+                <div class="text">
+                    <h3>高梓括的标题</h3>
+                    <p>
+                        下面的文字是绝对定位，p元素默认隐藏，只显示h3，当鼠标hover的时候，会有动画效果。
+                    </p>
+                </div>
+            </a>
+        </li>
+    </ul>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1019高梓括</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc, #eef2ff);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2f3a4a;
+            letter-spacing: 1px;
+        }
+
+        .flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            list-style: none;
+            justify-content: center;
+        }
+
+        .flex li {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            border: 2px solid #4a5568;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            border-radius: 12px;
+        }
+
+        .small {
+            position: absolute;
+            display: block;
+        }
+
+        .box1 .small:nth-child(1) {
+            width: 0;
+            height: 0;
+            left: 0;
+            top: 0;
+            background: transparent;
+        }
+
+        .box1 .small:nth-child(2) {
+            width: 100px;
+            height: 100px;
+            left: 60px;
+            top: 60px;
+            background: #7c9cff;
+        }
+
+        .box1 .small:nth-child(3) {
+            width: 0;
+            height: 0;
+            right: 0;
+            bottom: 0;
+            background: transparent;
+        }
+
+        .box2 .small:nth-child(1) {
+            width: 70px;
+            height: 70px;
+            left: 75px;
+            top: 30px;
+            background: #7dd3fc;
+        }
+
+        .box2 .small:nth-child(2) {
+            width: 70px;
+            height: 70px;
+            left: 75px;
+            bottom: 30px;
+            background: #a78bfa;
+        }
+
+        .box2 .small:nth-child(3) {
+            width: 0;
+            height: 0;
+            left: 0;
+            top: 0;
+            background: transparent;
+        }
+
+        .box3 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 18px;
+        }
+
+        .box3 .small:nth-child(1),
+        .box3 .small:nth-child(2),
+        .box3 .small:nth-child(3),
+        .box3 .small:nth-child(4) {
+            position: static;
+            width: 55px;
+            height: 55px;
+            display: block;
+            background: #8ecae6;
+            margin: 0;
+            border-radius: 8px;
+        }
+
+        .box3 .small:nth-child(2) {
+            background: #90e0ef;
+        }
+
+        .box3 .small:nth-child(3) {
+            background: #a0c4ff;
+        }
+
+        .box3 .small:nth-child(4) {
+            background: #bdb2ff;
+        }
+
+        .box4 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .box4 .small:nth-child(1) {
+            width: 120px;
+            height: 30px;
+            position: static;
+            background: #8ecae6;
+            border-radius: 8px;
+        }
+
+        .box4 .bottom-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .box4 .bottom-row .small {
+            width: 54px;
+            height: 54px;
+            position: static;
+            display: inline-block;
+            background: #bde0fe;
+            border-radius: 8px;
+        }
+
+        .box4 .bottom-row .small:last-child {
+            background: #cdb4db;
+        }
+    </style>
+</head>
+<body>
+    <h2>1019高梓括flex</h2>
+    <ul class="flex">
+        <li class="box1">
+            <span class="small"></span>
+            <span class="small"></span>
+            <span class="small"></span>
+        </li>
+        <li class="box2">
+            <span class="small"></span>
+            <span class="small"></span>
+            <span class="small"></span>
+        </li>
+        <li class="box3">
+            <span class="small"></span>
+            <span class="small"></span>
+            <span class="small"></span>
+            <span class="small"></span>
+        </li>
+        <li class="box4">
+            <span class="small"></span>
+            <div class="bottom-row">
+                <span class="small"></span>
+                <span class="small"></span>
+            </div>
+        </li>
+    </ul>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高梓括 · 四色图片幻灯片</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 30px 20px;
+      background: #eef1f5;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    .box {
+      position: relative;
+      width: min(920px, 100%);
+      overflow: hidden;
+      border-radius: 28px;
+      background-color: #5b6cff;
+      color: #fff;
+      box-shadow: 0 24px 70px rgba(30, 35, 50, 0.2);
+      animation: change-bg 20s ease-in-out infinite;
+    }
+
+    .box-header {
+      position: relative;
+      z-index: 2;
+      padding: 28px 34px 20px;
+      text-align: center;
+    }
+
+    .box-header h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 4vw, 2.6rem);
+      letter-spacing: 0.08em;
+    }
+
+    .box-header p {
+      margin: 8px 0 0;
+      opacity: 0.9;
+    }
+
+    .image-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #111;
+    }
+
+    .image-track {
+      display: flex;
+      width: 300%;
+      height: 100%;
+      animation: image-position 12s ease-in-out infinite;
+    }
+
+    .slide {
+      position: relative;
+      width: 33.333%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .slide img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      background: #111;
+    }
+
+    .text-card {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      max-width: calc(100% - 48px);
+      padding: 16px 20px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      text-align: left;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .text-card h2 {
+      margin: 0 0 5px;
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+    }
+
+    .text-card p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.88);
+      line-height: 1.5;
+    }
+
+    @keyframes change-bg {
+      0%, 20% { background-color: #5b6cff; }
+      25%, 45% { background-color: #9b5cff; }
+      50%, 70% { background-color: #ff8a3d; }
+      75%, 95% { background-color: #22b87a; }
+      100% { background-color: #5b6cff; }
+    }
+
+    @keyframes image-position {
+      0%, 28% { transform: translateX(0); }
+      33%, 61% { transform: translateX(-33.333%); }
+      66%, 95% { transform: translateX(-66.666%); }
+      100% { transform: translateX(0); }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 14px; }
+      .box-header { padding: 22px 18px 16px; }
+      .text-card { left: 14px; bottom: 14px; max-width: calc(100% - 28px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .box, .image-track { animation: none; }
+      .image-track { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <main class="box" aria-label="高梓括四色图片幻灯片">
+    <header class="box-header">
+      <h1>高梓括</h1>
+      <p>纯 CSS animation · 图片位置切换 · 四色背景</p>
+    </header>
+
+    <section class="image-stage" aria-label="图片幻灯片">
+      <div class="image-track">
+        <article class="slide">
+          <img src="img/1.jpg" alt="幻灯片图片一">
+          <div class="text-card">
+            <h2>图片 · 01</h2>
+            <p>高梓括的第一张图片通过位置动画展示。</p>
+          </div>
+        </article>
+        <article class="slide">
+          <img src="img/2.jpg" alt="幻灯片图片二">
+          <div class="text-card">
+            <h2>图片 · 02</h2>
+            <p>高梓括的第二张图片从右侧滚动进入。</p>
+          </div>
+        </article>
+        <article class="slide">
+          <img src="img/3.jpg" alt="幻灯片图片三">
+          <div class="text-card">
+            <h2>图片 · 03</h2>
+            <p>高梓括的第三张图片完成幻灯片循环。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

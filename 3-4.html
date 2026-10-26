@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1019高梓括</title>
+    <link rel="stylesheet" href="css.css" href="css.css">
+    <style>
+        .text {
+            color: violet!important;
+            /* hack, 优先级大于内嵌css */
+        }
+        #box p{
+            color: silver;
+        }
+        .box p{
+            color: purple;
+        }
+        #text{
+            color: yellow;
+        }
+        p{
+            color: red;
+            font-size: 60px;
+        }
+        /* 优先级 id > class > tag */
+    </style>
+    
+</head>
+<body>
+    <h2>层叠与继承</h2>
+    <div id = "box" class="box">
+        <p id = "text" class = "text">1019 高梓括</p>
+        <p>css选择器的优先级</p>
+    </div>
+</body>
+</html>

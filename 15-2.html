@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>15-2 高梓括 · JavaScript 程序结构</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #f2f4f8;
+      color: #2b2f36;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 60rem;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      margin: 1.5rem 0 1rem;
+      padding-left: 0.6rem;
+      border-left: 4px solid #4f6ef7;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    pre {
+      background: #2b2f36;
+      color: #e5e7eb;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+    }
+
+    input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      width: 12rem;
+      margin-right: 0.5rem;
+    }
+
+    button {
+      background: #4f6ef7;
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background: #3b59d8;
+    }
+
+    .output {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: #f6f8ff;
+      border: 1px dashed #b6c2f5;
+      border-radius: 0.5rem;
+      min-height: 1.5rem;
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+
+    table.nine {
+      border-collapse: collapse;
+    }
+
+    table.nine td {
+      border: 1px solid #d1d5db;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+      text-align: center;
+      background: #fff;
+    }
+
+    footer {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.8rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>JavaScript 程序结构</h1>
+      <p>条件语句与循环语句演示 · 15-2 · 高梓括</p>
+    </header>
+
+    <main>
+      <section>
+        <h2>一、条件语句</h2>
+
+        <div class="card">
+          <h3>1. if ... else if ... else —— 成绩等级判断</h3>
+          <pre><code>if (score >= 90)      { grade = 'A（优秀）'; }
+else if (score >= 80) { grade = 'B（良好）'; }
+else if (score >= 70) { grade = 'C（中等）'; }
+else if (score >= 60) { grade = 'D（及格）'; }
+else                  { grade = 'E（不及格）'; }</code></pre>
+          <input id="score" type="number" min="0" max="100" placeholder="请输入成绩（0-100）">
+          <button onclick="judgeScore()">判断等级</button>
+          <div class="output" id="scoreOut">结果会显示在这里</div>
+        </div>
+
+        <div class="card">
+          <h3>2. switch —— 今天是星期几</h3>
+          <pre><code>switch (new Date().getDay()) {
+  case 0:  text = '星期日'; break;
+  case 1:  text = '星期一'; break;
+  case 2:  text = '星期二'; break;
+  case 3:  text = '星期三'; break;
+  case 4:  text = '星期四'; break;
+  case 5:  text = '星期五'; break;
+  case 6:  text = '星期六'; break;
+  default: text = '未知';
+}</code></pre>
+          <button onclick="showWeekday()">查看今天</button>
+          <div class="output" id="weekOut"></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>二、循环语句</h2>
+
+        <div class="card">
+          <h3>3. for 循环（嵌套）—— 九九乘法表</h3>
+          <pre><code>for (var i = 1; i <= 9; i++) {
+  for (var j = 1; j <= i; j++) {
+    // 输出 j × i = i*j
+  }
+}</code></pre>
+          <button onclick="renderTable()">生成乘法表</button>
+          <div class="output" id="tableOut"></div>
+        </div>
+
+        <div class="card">
+          <h3>4. while 循环 —— 从 1 累加，和不超过 1000</h3>
+          <pre><code>var sum = 0, i = 1;
+while (sum + i <= 1000) {
+  sum += i;
+  i++;
+}</code></pre>
+          <button onclick="runWhile()">开始累加</button>
+          <div class="output" id="whileOut"></div>
+        </div>
+
+        <div class="card">
+          <h3>5. do ... while + break / continue —— 挑选数字</h3>
+          <pre><code>do {
+  n++;
+  if (n % 3 === 0) { continue; } // 跳过 3 的倍数
+  if (n > 16)      { break; }    // 超过 16 停止
+  picked.push(n);
+} while (n <= 20);</code></pre>
+          <button onclick="runDoWhile()">开始挑选</button>
+          <div class="output" id="doOut"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>高梓括 · 《高级网页设计》课堂实践 · 15-2</footer>
+  </div>
+
+  <script>
+    // 1. 条件语句：if ... else if ... else
+    function judgeScore() {
+      var input = document.getElementById('score');
+      var out = document.getElementById('scoreOut');
+      var score = parseFloat(input.value);
+      var grade;
+
+      if (isNaN(score) || score < 0 || score > 100) {
+        out.textContent = '请输入 0 到 100 之间的成绩！';
+        return;
+      }
+
+      if (score >= 90)      { grade = 'A（优秀）'; }
+      else if (score >= 80) { grade = 'B（良好）'; }
+      else if (score >= 70) { grade = 'C（中等）'; }
+      else if (score >= 60) { grade = 'D（及格）'; }
+      else                  { grade = 'E（不及格）'; }
+
+      out.textContent = '成绩 ' + score + ' 分，等级为：' + grade;
+    }
+
+    // 2. 条件语句：switch
+    function showWeekday() {
+      var text;
+      switch (new Date().getDay()) {
+        case 0:  text = '星期日'; break;
+        case 1:  text = '星期一'; break;
+        case 2:  text = '星期二'; break;
+        case 3:  text = '星期三'; break;
+        case 4:  text = '星期四'; break;
+        case 5:  text = '星期五'; break;
+        case 6:  text = '星期六'; break;
+        default: text = '未知';
+      }
+      document.getElementById('weekOut').textContent = '今天是 ' + text;
+    }
+
+    // 3. 循环语句：for 嵌套循环
+    function renderTable() {
+      var html = '<table class="nine">';
+      for (var i = 1; i <= 9; i++) {
+        html += '<tr>';
+        for (var j = 1; j <= i; j++) {
+          html += '<td>' + j + ' × ' + i + ' = ' + (i * j) + '</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</table>';
+      document.getElementById('tableOut').innerHTML = html;
+    }
+
+    // 4. 循环语句：while
+    function runWhile() {
+      var sum = 0, i = 1;
+      while (sum + i <= 1000) {
+        sum += i;
+        i++;
+      }
+      document.getElementById('whileOut').textContent =
+        '从 1 累加到 ' + (i - 1) + ' 时，和为 ' + sum + '（再加 ' + i + ' 就会超过 1000）';
+    }
+
+    // 5. 循环语句：do ... while + break / continue
+    function runDoWhile() {
+      var n = 0;
+      var picked = [];
+      do {
+        n++;
+        if (n % 3 === 0) { continue; } // 跳过 3 的倍数
+        if (n > 16)      { break; }    // 超过 16 停止
+        picked.push(n);
+      } while (n <= 20);
+      document.getElementById('doOut').textContent = '输出的数字：' + picked.join('、');
+    }
+
+    // 页面加载后自动运行无需输入的演示
+    showWeekday();
+    renderTable();
+    runWhile();
+    runDoWhile();
+  </script>
+</body>
+</html>
