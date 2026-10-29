@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高梓括 · 最新投诉选项卡列表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: SimSun, "宋体", serif;
+            background: #f5f5f5;
+            padding: 30px 15px;
+        }
+
+        .news-box {
+            width: 260px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* 选项卡头部 */
+        .tab-head {
+            border-bottom: 1px solid #c9c9c9;
+            font-size: 0; /* 清除行内块之间的间隙 */
+        }
+
+        .tab-head span {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 14px;
+            color: #444;
+            cursor: pointer;
+        }
+
+        /* 选项卡之间的红色分隔线 */
+        .tab-head span + span {
+            border-left: 1px solid #e60012;
+        }
+
+        /* 当前选项卡：加粗 + 红色下划线 */
+        .tab-head .active {
+            font-weight: bold;
+            color: #000;
+            border-bottom: 2px solid #e60012;
+            margin-bottom: -1px; /* 压住灰色底线 */
+        }
+
+        /* 新闻列表 */
+        .news-list {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .news-list li {
+            font-size: 12px;
+            line-height: 2;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* 超出显示省略号 */
+            cursor: pointer;
+        }
+
+        /* 红色小方块 */
+        .news-list li::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: #e60012;
+            margin-right: 6px;
+            vertical-align: 2px;
+        }
+
+        .news-list li:hover {
+            color: #e60012;
+        }
+    </style>
+</head>
+<body>
+    <div class="news-box">
+        <div class="tab-head">
+            <span class="active">最新投诉</span><span>官方回应</span><span>追踪调查</span>
+        </div>
+        <ul class="news-list">
+            <li>北京火车站出租车乱象调查 司机称计价器坏</li>
+            <li>公园仙人掌遭刻字“毁容” 一棵仙人掌被刻</li>
+            <li>昆明屡现游客“辣手摧鸥” 网友谴责(组图)</li>
+            <li>四川一星级公厕开建1年未开放变“茶楼”</li>
+            <li>北京北海地坛公园暗藏高端会所 园方称“曝</li>
+            <li>北京北海金丝楠木柱遭刻字“签名”破坏</li>
+            <li>北京动物园门票玩猫腻 低价门票遭“雪藏”</li>
+            <li>女子不满“无购物”投诉旅行社 称东西一样没</li>
+            <li>老年人参团游权益易受损 旅行社被曝对老人</li>
+        </ul>
+    </div>
+</body>
+</html>
