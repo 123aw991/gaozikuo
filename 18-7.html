@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>18-7 高梓括 · 基于 three.js 的 3D 数据图表</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #070b14;
+    --panel: rgba(16, 26, 45, 0.92);
+    --line: rgba(120, 150, 200, 0.18);
+    --text: #e6edfa;
+    --muted: #8ea3c4;
+  }
+
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    padding: 34px 26px 46px;
+    background:
+      radial-gradient(1100px 640px at 12% -10%, rgba(56, 189, 248, 0.14), transparent 60%),
+      radial-gradient(900px 600px at 92% 6%, rgba(181, 123, 255, 0.14), transparent 62%),
+      var(--bg);
+  }
+
+  .page { width: min(1320px, 100%); margin: 0 auto; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 15px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #a9c2e6;
+    border: 1px solid rgba(120, 160, 220, 0.22);
+    border-radius: 999px;
+    background: rgba(120, 160, 220, 0.07);
+  }
+
+  .eyebrow i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 10px #38bdf8;
+    font-style: normal;
+  }
+
+  h1 {
+    margin: 16px 0 8px;
+    font-size: clamp(24px, 2.6vw, 34px);
+    letter-spacing: 1px;
+    background: linear-gradient(100deg, #ffffff, #a9c6ff 55%, #7ee0d0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .sub { color: var(--muted); font-size: 13px; line-height: 1.9; }
+
+  .charts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 22px;
+  }
+
+  .card {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--panel);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 10px;
+  }
+
+  .card-head h2 {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-head h2::before {
+    content: "";
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #38bdf8, #b57bff);
+  }
+
+  .card-head .tag {
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .stage { position: relative; height: 420px; }
+
+  .stage canvas { display: block; width: 100%; height: 100%; }
+
+  .hint {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    font-size: 11px;
+    color: rgba(142, 163, 196, 0.75);
+    letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+
+  .tip3d {
+    position: absolute;
+    z-index: 5;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(140, 175, 240, 0.32);
+    background: rgba(10, 17, 31, 0.95);
+    font-size: 12px;
+    color: #e6edfa;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    white-space: nowrap;
+  }
+
+  footer {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(150, 172, 205, 0.62);
+    letter-spacing: 0.6px;
+  }
+
+  @media (max-width: 900px) {
+    .charts { grid-template-columns: 1fr; }
+    .stage { height: 360px; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="eyebrow"><i></i>高级网页设计 · <strong>18-7</strong> · three.js 3D 图表</div>
+      <h1>three.js 三维数据图表</h1>
+      <div class="sub">图一：3D 柱状图（各城市分季度销售额）；图二：3D 环形占比图（销售渠道分布）。全部由 three.js 几何体实时构建，支持拖拽旋转、滚轮缩放、悬停高亮。库文件已本地化至 cdn/three.min.js。</div>
+    </header>
+
+    <section class="charts">
+      <div class="card">
+        <div class="card-head">
+          <h2>3D 柱状图 · 城市分季度销售额</h2>
+          <span class="tag">BoxGeometry</span>
+        </div>
+        <div class="stage" id="barStage">
+          <div class="tip3d" id="barTip"></div>
+          <div class="hint">拖拽旋转 · 滚轮缩放 · 悬停查看</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>3D 环形图 · 销售渠道占比</h2>
+          <span class="tag">ExtrudeGeometry</span>
+        </div>
+        <div class="stage" id="pieStage">
+          <div class="tip3d" id="pieTip"></div>
+          <div class="hint">拖拽旋转 · 滚轮缩放 · 悬停查看</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>高梓括 · 计算机 24010 · 24001011019</span>
+      <span>three.js r128 · 本地 CDN：cdn/three.min.js</span>
+    </footer>
+  </div>
+
+<script src="cdn/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var PALETTE = [0x38bdf8, 0xb57bff, 0x2ec4b6, 0xffb703, 0xf472b6, 0x7ee0d0];
+
+  /* ---------------- 公共：文字 Sprite ---------------- */
+  function makeLabel(text, color, scale) {
+    var canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 80;
+    var ctx = canvas.getContext("2d");
+    ctx.font = "700 40px 'Microsoft YaHei', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = color;
+    ctx.fillText(text, 128, 40);
+
+    var texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+
+    var material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false
+    });
+    var sprite = new THREE.Sprite(material);
+    sprite.scale.set(5 * (scale || 1), 1.56 * (scale || 1), 1);
+    return sprite;
+  }
+
+  /* ---------------- 公共：场景与相机控制 ---------------- */
+  function createScene(container) {
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+    var key = new THREE.DirectionalLight(0xffffff, 0.85);
+    key.position.set(18, 30, 20);
+    scene.add(key);
+
+    var fill = new THREE.PointLight(0x66aaff, 0.5, 120);
+    fill.position.set(-20, 14, -16);
+    scene.add(fill);
+
+    var world = new THREE.Group();
+    scene.add(world);
+
+    var state = {
+      scene: scene,
+      camera: camera,
+      renderer: renderer,
+      world: world,
+      container: container,
+      theta: 0.65,
+      phi: 1.05,
+      radius: 34,
+      target: new THREE.Vector3(0, 2, 0),
+      dragging: false,
+      lastX: 0,
+      lastY: 0
+    };
+
+    container.addEventListener("pointerdown", function (e) {
+      state.dragging = true;
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+      container.setPointerCapture(e.pointerId);
+    });
+
+    container.addEventListener("pointermove", function (e) {
+      if (!state.dragging) return;
+      state.theta -= (e.clientX - state.lastX) * 0.006;
+      state.phi -= (e.clientY - state.lastY) * 0.005;
+      state.phi = Math.max(0.35, Math.min(1.45, state.phi));
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+    });
+
+    container.addEventListener("pointerup", function () { state.dragging = false; });
+    container.addEventListener("pointerleave", function () { state.dragging = false; });
+
+    container.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      state.radius += e.deltaY * 0.02;
+      state.radius = Math.max(14, Math.min(60, state.radius));
+    }, { passive: false });
+
+    function resize() {
+      var w = container.clientWidth || 600;
+      var h = container.clientHeight || 400;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    function render(idleSpeed) {
+      if (!state.dragging) state.theta += idleSpeed;
+      camera.position.set(
+        state.target.x + state.radius * Math.sin(state.phi) * Math.cos(state.theta),
+        state.target.y + state.radius * Math.cos(state.phi),
+        state.target.z + state.radius * Math.sin(state.phi) * Math.sin(state.theta)
+      );
+      camera.lookAt(state.target);
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+
+    return { state: state, render: render, resize: resize };
+  }
+
+  /* ---------------- 图一：3D 柱状图 ---------------- */
+  function buildBarChart() {
+    var container = document.getElementById("barStage");
+    var tip = document.getElementById("barTip");
+    var view = createScene(container);
+
+    var cities = ["北京", "上海", "广州", "深圳", "杭州", "成都"];
+    var quarters = ["Q1", "Q2", "Q3", "Q4"];
+    var data = [
+      [86, 102, 121, 148],
+      [94, 118, 130, 162],
+      [70, 88, 104, 126],
+      [78, 96, 118, 141],
+      [62, 80, 95, 117],
+      [55, 71, 86, 108]
+    ];
+
+    var maxValue = 160;
+    var cellX = 3.2, cellZ = 3.2;
+    var gridW = (cities.length - 1) * cellX;
+    var gridD = (quarters.length - 1) * cellZ;
+
+    var grid = new THREE.GridHelper(26, 13, 0x2a3b5c, 0x1c2942);
+    grid.position.y = 0.01;
+    view.state.world.add(grid);
+
+    var bars = [];
+
+    for (var i = 0; i < cities.length; i++) {
+      for (var j = 0; j < quarters.length; j++) {
+        var value = data[i][j];
+        var h = (value / maxValue) * 9 + 0.4;
+        var geo = new THREE.BoxGeometry(1.7, h, 1.7);
+        var t = value / maxValue;
+        var color = new THREE.Color(0x274b8f).lerp(new THREE.Color(0x38e0ff), t);
+
+        var material = new THREE.MeshPhongMaterial({
+          color: color,
+          transparent: true,
+          opacity: 0.92,
+          shininess: 60
+        });
+
+        var mesh = new THREE.Mesh(geo, material);
+        var x = -gridW / 2 + i * cellX;
+        var z = -gridD / 2 + j * cellZ;
+        mesh.position.set(x, h / 2, z);
+        mesh.userData = { city: cities[i], quarter: quarters[j], value: value };
+        view.state.world.add(mesh);
+        bars.push(mesh);
+      }
+
+      var cityLabel = makeLabel(cities[i], "#a9c2e6", 0.9);
+      cityLabel.position.set(-gridW / 2 + i * cellX, 0.9, gridD / 2 + 2.2);
+      view.state.world.add(cityLabel);
+    }
+
+    for (var q = 0; q < quarters.length; q++) {
+      var qLabel = makeLabel(quarters[q], "#7ee0d0", 0.9);
+      qLabel.position.set(-gridW / 2 - 2.4, 0.9, -gridD / 2 + q * cellZ);
+      view.state.world.add(qLabel);
+    }
+
+    for (var tick = 0; tick <= 4; tick++) {
+      var v = tick * 40;
+      var vLabel = makeLabel(v + "万", "#8ea3c4", 0.8);
+      vLabel.position.set(-gridW / 2 - 3.4, (v / maxValue) * 9 + 0.2, gridD / 2 + 1.2);
+      view.state.world.add(vLabel);
+    }
+
+    var title = makeLabel("2026 城市季度销售额（万元）", "#e6edfa", 1.25);
+    title.position.set(0, 12.4, 0);
+    view.state.world.add(title);
+
+    /* 悬停高亮 */
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2(-10, -10);
+    var hovered = null;
+
+    container.addEventListener("pointermove", function (e) {
+      var rect = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      var px = e.clientX - rect.left;
+      var py = e.clientY - rect.top;
+      tip.style.left = Math.min(px + 14, rect.width - 150) + "px";
+      tip.style.top = Math.max(py - 34, 8) + "px";
+    });
+
+    function updateHover() {
+      raycaster.setFromCamera(mouse, view.state.camera);
+      var hits = raycaster.intersectObjects(bars);
+      var hit = hits.length ? hits[0].object : null;
+
+      if (hit !== hovered) {
+        if (hovered) hovered.material.emissive.setHex(0x000000);
+        hovered = hit;
+        if (hovered) {
+          hovered.material.emissive.setHex(0x1f4d7a);
+          tip.innerHTML = "<b style='color:#7ee0d0'>" + hovered.userData.city +
+            " · " + hovered.userData.quarter + "</b><br/>销售额：" + hovered.userData.value + " 万元";
+          tip.style.opacity = 1;
+        } else {
+          tip.style.opacity = 0;
+        }
+      }
+    }
+
+    return function render() {
+      updateHover();
+      view.render(0.0032);
+    };
+  }
+
+  /* ---------------- 图二：3D 环形图 ---------------- */
+  function buildDonutChart() {
+    var container = document.getElementById("pieStage");
+    var tip = document.getElementById("pieTip");
+    var view = createScene(container);
+
+    var items = [
+      { name: "线上商城", value: 34 },
+      { name: "小程序", value: 26 },
+      { name: "线下门店", value: 18 },
+      { name: "分销渠道", value: 12 },
+      { name: "其他", value: 10 }
+    ];
+
+    var total = items.reduce(function (s, d) { return s + d.value; }, 0);
+    var r0 = 4.6, r1 = 9.4, depth = 3.2;
+    var gap = 0.05;
+    var start = -Math.PI / 2;
+    var sectors = [];
+
+    function sectorShape(a0, a1) {
+      var shape = new THREE.Shape();
+      var segs = 36;
+      var i, a;
+      shape.moveTo(r0 * Math.cos(a0), r0 * Math.sin(a0));
+      for (i = 0; i <= segs; i++) {
+        a = a0 + (a1 - a0) * (i / segs);
+        shape.lineTo(r1 * Math.cos(a), r1 * Math.sin(a));
+      }
+      for (i = segs; i >= 0; i--) {
+        a = a0 + (a1 - a0) * (i / segs);
+        shape.lineTo(r0 * Math.cos(a), r0 * Math.sin(a));
+      }
+      shape.closePath();
+      return shape;
+    }
+
+    items.forEach(function (item, idx) {
+      var sweep = (item.value / total) * Math.PI * 2;
+      var a0 = start;
+      var a1 = start + sweep - gap;
+      start += sweep;
+
+      var geo = new THREE.ExtrudeGeometry(sectorShape(a0, a1), {
+        depth: depth,
+        bevelEnabled: false,
+        curveSegments: 8
+      });
+
+      var material = new THREE.MeshPhongMaterial({
+        color: PALETTE[idx % PALETTE.length],
+        transparent: true,
+        opacity: 0.94,
+        shininess: 70,
+        side: THREE.DoubleSide
+      });
+
+      var mesh = new THREE.Mesh(geo, material);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.y = 0;
+      mesh.userData = item;
+      view.state.world.add(mesh);
+      sectors.push(mesh);
+
+      var mid = (a0 + a1) / 2;
+      var label = makeLabel(item.name + " " + item.value + "%", "#e6edfa", 1.05);
+      label.position.set(
+        (r1 + 2.1) * Math.cos(mid),
+        depth / 2 + 0.3,
+        (r1 + 2.1) * Math.sin(mid)
+      );
+      view.state.world.add(label);
+    });
+
+    var centerLabel = makeLabel("销售渠道结构", "#e6edfa", 1.2);
+    centerLabel.position.set(0, depth / 2 + 0.4, 0);
+    view.state.world.add(centerLabel);
+
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2(-10, -10);
+    var hovered = null;
+
+    container.addEventListener("pointermove", function (e) {
+      var rect = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      var px = e.clientX - rect.left;
+      var py = e.clientY - rect.top;
+      tip.style.left = Math.min(px + 14, rect.width - 170) + "px";
+      tip.style.top = Math.max(py - 34, 8) + "px";
+    });
+
+    function updateHover() {
+      raycaster.setFromCamera(mouse, view.state.camera);
+      var hits = raycaster.intersectObjects(sectors);
+      var hit = hits.length ? hits[0].object : null;
+
+      if (hit !== hovered) {
+        if (hovered) {
+          hovered.material.emissive.setHex(0x000000);
+          hovered.position.y = 0;
+        }
+        hovered = hit;
+        if (hovered) {
+          hovered.material.emissive.setHex(0x22406b);
+          hovered.position.y = 0.7;
+          tip.innerHTML = "<b style='color:#7ee0d0'>" + hovered.userData.name +
+            "</b><br/>占比：" + hovered.userData.value + "%";
+          tip.style.opacity = 1;
+        } else {
+          tip.style.opacity = 0;
+        }
+      }
+    }
+
+    return function render() {
+      updateHover();
+      view.render(0.0042);
+    };
+  }
+
+  /* ---------------- 渲染循环 ---------------- */
+  var renderers = [buildBarChart(), buildDonutChart()];
+
+  (function loop() {
+    for (var i = 0; i < renderers.length; i++) renderers[i]();
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>

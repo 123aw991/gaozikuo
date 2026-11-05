@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>18-4 高梓括 · 基于 ECharts 的数据可视化图表</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #070b14;
+    --panel: rgba(16, 26, 45, 0.92);
+    --line: rgba(120, 150, 200, 0.18);
+    --text: #e6edfa;
+    --muted: #8ea3c4;
+  }
+
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    padding: 34px 26px 46px;
+    background:
+      radial-gradient(1100px 640px at 12% -10%, rgba(56, 189, 248, 0.14), transparent 60%),
+      radial-gradient(900px 600px at 92% 6%, rgba(181, 123, 255, 0.14), transparent 62%),
+      var(--bg);
+  }
+
+  .page { width: min(1320px, 100%); margin: 0 auto; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 15px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #a9c2e6;
+    border: 1px solid rgba(120, 160, 220, 0.22);
+    border-radius: 999px;
+    background: rgba(120, 160, 220, 0.07);
+  }
+
+  .eyebrow i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 10px #38bdf8;
+    font-style: normal;
+  }
+
+  h1 {
+    margin: 16px 0 8px;
+    font-size: clamp(24px, 2.6vw, 34px);
+    letter-spacing: 1px;
+    background: linear-gradient(100deg, #ffffff, #a9c6ff 55%, #7ee0d0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .sub { color: var(--muted); font-size: 13px; line-height: 1.9; }
+
+  .charts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 22px;
+  }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--panel);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    padding: 18px 18px 10px;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .card-head h2 {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-head h2::before {
+    content: "";
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #38bdf8, #b57bff);
+  }
+
+  .card-head .tag {
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .chart { width: 100%; height: 400px; }
+
+  footer {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(150, 172, 205, 0.62);
+    letter-spacing: 0.6px;
+  }
+
+  @media (max-width: 900px) {
+    .charts { grid-template-columns: 1fr; }
+    .chart { height: 340px; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="eyebrow"><i></i>高级网页设计 · <strong>18-4</strong> · Apache ECharts</div>
+      <h1>ECharts 数据可视化图表</h1>
+      <div class="sub">图一：柱状图 + 折线图组合（月度订单量与销售额双轴对比）；图二：环形饼图（商品品类销售占比）。ECharts 库文件已本地化至 cdn/echarts.min.js，离线可用。</div>
+    </header>
+
+    <section class="charts">
+      <div class="card">
+        <div class="card-head">
+          <h2>2026 年度月度经营趋势</h2>
+          <span class="tag">柱状图 + 折线图</span>
+        </div>
+        <div class="chart" id="chartBar"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>商品品类销售占比</h2>
+          <span class="tag">环形饼图</span>
+        </div>
+        <div class="chart" id="chartPie"></div>
+      </div>
+    </section>
+
+    <footer>
+      <span>高梓括 · 计算机 24010 · 24001011019</span>
+      <span>ECharts 5.5.1 · 本地 CDN：cdn/echarts.min.js</span>
+    </footer>
+  </div>
+
+<script src="cdn/echarts.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var barChart = echarts.init(document.getElementById("chartBar"), null, { renderer: "canvas" });
+  var pieChart = echarts.init(document.getElementById("chartPie"), null, { renderer: "canvas" });
+
+  /* ---------------- 图一：柱状图 + 折线图 ---------------- */
+  var months = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+  var orders = [86, 72, 105, 118, 132, 146, 138, 155, 171, 188, 214, 246];
+  var sales = [1280, 1060, 1560, 1720, 1950, 2210, 2080, 2360, 2610, 2890, 3350, 3920];
+
+  barChart.setOption({
+    backgroundColor: "transparent",
+    color: ["#38bdf8", "#ffb703"],
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      backgroundColor: "rgba(10,17,31,0.94)",
+      borderColor: "rgba(120,150,200,0.35)",
+      textStyle: { color: "#e6edfa", fontSize: 12 }
+    },
+    legend: {
+      top: 4,
+      textStyle: { color: "#8ea3c4", fontSize: 12 }
+    },
+    grid: { left: 54, right: 58, top: 56, bottom: 34 },
+    xAxis: {
+      type: "category",
+      data: months,
+      axisLine: { lineStyle: { color: "rgba(140,165,200,0.35)" } },
+      axisTick: { show: false },
+      axisLabel: { color: "#8ea3c4", fontSize: 11 }
+    },
+    yAxis: [
+      {
+        type: "value",
+        name: "订单量(万单)",
+        nameTextStyle: { color: "#8ea3c4", fontSize: 11 },
+        axisLabel: { color: "#8ea3c4", fontSize: 11 },
+        splitLine: { lineStyle: { color: "rgba(120,150,200,0.12)" } }
+      },
+      {
+        type: "value",
+        name: "销售额(万元)",
+        nameTextStyle: { color: "#8ea3c4", fontSize: 11 },
+        axisLabel: { color: "#8ea3c4", fontSize: 11 },
+        splitLine: { show: false }
+      }
+    ],
+    series: [
+      {
+        name: "订单量",
+        type: "bar",
+        data: orders,
+        barWidth: 16,
+        itemStyle: {
+          borderRadius: [6, 6, 0, 0],
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "#38bdf8" },
+            { offset: 1, color: "rgba(56,189,248,0.18)" }
+          ])
+        }
+      },
+      {
+        name: "销售额",
+        type: "line",
+        yAxisIndex: 1,
+        data: sales,
+        smooth: true,
+        symbol: "circle",
+        symbolSize: 7,
+        lineStyle: { width: 3, color: "#ffb703" },
+        itemStyle: { color: "#ffb703", borderColor: "#fff", borderWidth: 1.5 },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "rgba(255,183,3,0.28)" },
+            { offset: 1, color: "rgba(255,183,3,0)" }
+          ])
+        }
+      }
+    ]
+  });
+
+  /* ---------------- 图二：环形饼图 ---------------- */
+  pieChart.setOption({
+    backgroundColor: "transparent",
+    color: ["#38bdf8", "#b57bff", "#2ec4b6", "#ffb703", "#f472b6", "#7ee0d0"],
+    tooltip: {
+      trigger: "item",
+      formatter: "{a}<br/>{b}: {c} 万元 ({d}%)",
+      backgroundColor: "rgba(10,17,31,0.94)",
+      borderColor: "rgba(120,150,200,0.35)",
+      textStyle: { color: "#e6edfa", fontSize: 12 }
+    },
+    legend: {
+      orient: "vertical",
+      right: 12,
+      top: "middle",
+      itemWidth: 10,
+      itemHeight: 10,
+      textStyle: { color: "#8ea3c4", fontSize: 12 }
+    },
+    series: [
+      {
+        name: "销售额",
+        type: "pie",
+        radius: ["42%", "68%"],
+        center: ["40%", "52%"],
+        avoidLabelOverlap: true,
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: "rgba(10,17,31,0.9)",
+          borderWidth: 2
+        },
+        label: {
+          color: "#c6d4ec",
+          fontSize: 12,
+          formatter: "{b}\n{d}%"
+        },
+        labelLine: {
+          lineStyle: { color: "rgba(140,165,200,0.45)" }
+        },
+        emphasis: {
+          scale: true,
+          scaleSize: 8,
+          itemStyle: { shadowBlur: 24, shadowColor: "rgba(56,189,248,0.45)" }
+        },
+        data: [
+          { value: 4860, name: "数码家电" },
+          { value: 3920, name: "服饰鞋包" },
+          { value: 3180, name: "美妆个护" },
+          { value: 2450, name: "食品生鲜" },
+          { value: 1860, name: "家居家装" },
+          { value: 1210, name: "运动户外" }
+        ]
+      },
+      {
+        name: "总量",
+        type: "pie",
+        radius: ["0%", "30%"],
+        center: ["40%", "52%"],
+        silent: true,
+        label: {
+          position: "center",
+          color: "#e6edfa",
+          fontSize: 13,
+          fontWeight: "bold",
+          formatter: "总销售额\n17480 万"
+        },
+        itemStyle: { color: "rgba(56,189,248,0.14)" },
+        data: [{ value: 1 }]
+      }
+    ]
+  });
+
+  window.addEventListener("resize", function () {
+    barChart.resize();
+    pieChart.resize();
+  });
+})();
+</script>
+</body>
+</html>

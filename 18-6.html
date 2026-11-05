@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>18-6 高梓括 · 基于 Mermaid 的智能客服系统流程图与 ER 图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #16233a;
+    --muted: #64748b;
+    --line: #e3eaf4;
+    --blue: #1d4ed8;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 38px 24px 56px;
+    color: var(--ink);
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    background:
+      radial-gradient(1100px 620px at 8% -12%, rgba(29, 78, 216, 0.1), transparent 62%),
+      radial-gradient(900px 560px at 96% 4%, rgba(5, 150, 105, 0.1), transparent 60%),
+      #f4f7fc;
+  }
+
+  .page { width: min(1240px, 100%); margin: 0 auto; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 15px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #3559a8;
+    border: 1px solid rgba(29, 78, 216, 0.18);
+    border-radius: 999px;
+    background: rgba(29, 78, 216, 0.06);
+  }
+
+  .eyebrow i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--blue);
+    font-style: normal;
+  }
+
+  h1 { margin: 16px 0 10px; font-size: clamp(24px, 2.5vw, 34px); letter-spacing: 1px; }
+
+  .sub { font-size: 13.5px; line-height: 1.95; color: var(--muted); max-width: 900px; }
+
+  .panel {
+    margin-top: 24px;
+    padding: 22px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(23, 48, 92, 0.09);
+  }
+
+  .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .panel-head h2 { font-size: 19px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+
+  .panel-head h2::before {
+    content: "";
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #2563eb, #059669);
+  }
+
+  .panel-head .tag {
+    font-size: 11.5px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 12px;
+    background: #f8fafc;
+  }
+
+  .diagram {
+    overflow: auto;
+    border: 1px dashed #dbe4f0;
+    border-radius: 14px;
+    padding: 18px 12px;
+    background:
+      linear-gradient(rgba(238, 243, 249, 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(238, 243, 249, 0.6) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .mermaid {
+    display: flex;
+    justify-content: center;
+    min-width: max-content;
+    margin: 0 auto;
+  }
+
+  .note {
+    margin-top: 14px;
+    font-size: 12.5px;
+    line-height: 1.85;
+    color: var(--muted);
+  }
+
+  footer {
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: #8ea0b8;
+    letter-spacing: 0.6px;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="eyebrow"><i></i>高级网页设计 · <strong>18-6</strong> · Mermaid 图表</div>
+      <h1>基于 Mermaid 的智能客服系统建模</h1>
+      <div class="sub">图一：客服会话处理流程图（flowchart）；图二：客服系统核心业务实体关系图（ER 图）。Mermaid 库文件已本地化至 cdn/mermaid.min.js，离线渲染。</div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>图一 · 智能客服会话处理流程图</h2>
+        <span class="tag">flowchart TD</span>
+      </div>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart TD
+    A(["用户发起提问"]) --> B["统一接入网关<br/>鉴权 · 限流 · 会话路由"]
+    B --> C{"意图识别 NLU<br/>置信度判断"}
+    C -- 高置信 FAQ 问题 --> D["知识检索增强 RAG<br/>向量召回 + BM25 混合"]
+    C -- 业务办理类请求 --> E["Agent 任务编排<br/>Function Call 调用"]
+    C -- 低置信 / 投诉风险 --> F["转接人工坐席"]
+    D --> G["大模型答案合成<br/>Prompt + 引用溯源"]
+    E --> G
+    G --> H{"安全合规过滤"}
+    H -- 通过 --> I["流式回复用户"]
+    H -- 命中敏感规则 --> J["话术降级 / 拦截"]
+    F --> K["工单流转 CRM 联动"]
+    I --> L[("会话日志与埋点")]
+    J --> L
+    K --> L
+    L --> M["质检与效果评测"]
+    M --> N[/"badcase 标注回流"/]
+    N --> O[("知识库 / Prompt 迭代")]
+    O -. 知识更新 .-> D
+    I --> P(["结束 · 满意度评价"])
+</pre>
+      </div>
+      <p class="note">流程要点：以意图识别置信度为核心分流点，FAQ 走 RAG 检索、业务请求走 Agent 工具调用、低置信与投诉转人工；全链路落日志，质检 badcase 回流知识库，形成自优化闭环。</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>图二 · 智能客服系统 ER 图</h2>
+        <span class="tag">erDiagram</span>
+      </div>
+      <div class="diagram">
+<pre class="mermaid">
+erDiagram
+    USER ||--o{ SESSION : "发起"
+    SESSION ||--|{ MESSAGE : "包含"
+    SESSION }o--|| CHANNEL : "来自"
+    SESSION ||--o{ TICKET : "产生"
+    TICKET }o--|| AGENT : "受理"
+    AGENT ||--o{ TICKET : "处理"
+    MESSAGE }o--o{ KB_CHUNK : "引用"
+    KB_CHUNK }o--|| KB_DOC : "切分自"
+    KB_DOC }o--|| KB_CATEGORY : "归属"
+    SESSION ||--|| FEEDBACK : "评价"
+    FEEDBACK }o--|| BADCASE : "沉淀"
+
+    USER {
+        bigint user_id PK "用户ID"
+        varchar nickname "昵称"
+        varchar phone "手机号"
+        tinyint vip_level "会员等级"
+        datetime created_at "注册时间"
+    }
+    SESSION {
+        bigint session_id PK "会话ID"
+        bigint user_id FK "用户ID"
+        int channel_id FK "渠道ID"
+        varchar status "进行中-已结束"
+        tinyint robot_rate "机器人解决率"
+        datetime start_time "开始时间"
+    }
+    MESSAGE {
+        bigint msg_id PK "消息ID"
+        bigint session_id FK "会话ID"
+        tinyint sender "0用户-1机器人-2坐席"
+        text content "消息内容"
+        varchar intent "命中意图"
+        float confidence "意图置信度"
+        datetime send_time "发送时间"
+    }
+    TICKET {
+        bigint ticket_id PK "工单ID"
+        bigint session_id FK "来源会话"
+        bigint agent_id FK "受理坐席"
+        varchar category "问题分类"
+        varchar status "待处理-已完结"
+        datetime close_time "完结时间"
+    }
+    AGENT {
+        bigint agent_id PK "坐席ID"
+        varchar agent_name "坐席姓名"
+        varchar skill_group "技能组"
+        tinyint online "在线状态"
+    }
+    KB_DOC {
+        bigint doc_id PK "文档ID"
+        int category_id FK "分类ID"
+        varchar title "文档标题"
+        varchar source "PDF-网页-工单"
+        datetime updated_at "更新时间"
+    }
+    KB_CHUNK {
+        bigint chunk_id PK "知识块ID"
+        bigint doc_id FK "所属文档"
+        text content "语义分块内容"
+        vector embedding "向量索引"
+        int hit_count "命中次数"
+    }
+    KB_CATEGORY {
+        int category_id PK "分类ID"
+        varchar category_name "分类名称"
+    }
+    FEEDBACK {
+        bigint feedback_id PK "评价ID"
+        bigint session_id FK "会话ID"
+        tinyint score "满意度1-5"
+        varchar tags "问题标签"
+    }
+    BADCASE {
+        bigint case_id PK "badcaseID"
+        bigint feedback_id FK "来源评价"
+        varchar reason "错误原因"
+        tinyint handle_status "0待处理-1已回流"
+    }
+    CHANNEL {
+        int channel_id PK "渠道ID"
+        varchar channel_name "网页-App-微信-电话"
+    }
+</pre>
+      </div>
+      <p class="note">核心实体：用户（USER）发起会话（SESSION），会话包含多角色消息（MESSAGE）；低置信会话产生工单（TICKET）由坐席（AGENT）受理；知识侧按「分类 → 文档 → 语义块（KB_CHUNK，含向量）」组织，供 RAG 引用；满意度评价（FEEDBACK）沉淀 badcase 回流知识库。</p>
+    </section>
+
+    <footer>
+      <span>高梓括 · 计算机 24010 · 24001011019</span>
+      <span>《高级网页设计》18-6 · Mermaid 9.4.3 · 本地 CDN：cdn/mermaid.min.js</span>
+    </footer>
+  </div>
+
+<script src="cdn/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    securityLevel: "loose",
+    flowchart: { curve: "basis", useMaxWidth: true, htmlLabels: true },
+    er: { useMaxWidth: true, fontSize: 13 },
+    themeVariables: {
+      primaryColor: "#e8f1ff",
+      primaryTextColor: "#16233a",
+      primaryBorderColor: "#7ba2e0",
+      lineColor: "#5b7ba8",
+      secondaryColor: "#e6f7f1",
+      tertiaryColor: "#f5f0ff",
+      fontSize: "14px",
+      fontFamily: "Microsoft YaHei, PingFang SC, sans-serif"
+    }
+  });
+</script>
+</body>
+</html>
