@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>18-2 高梓括 · 基于 Canvas 的电商全站系统架构图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #070b14;
+    --panel: #0d1424;
+    --line: rgba(120, 150, 200, 0.18);
+    --text: #e6edfa;
+    --muted: #8ea3c4;
+  }
+
+  body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(56, 189, 248, 0.13), transparent 60%),
+      radial-gradient(900px 620px at 92% 8%, rgba(181, 123, 255, 0.14), transparent 62%),
+      radial-gradient(900px 700px at 50% 110%, rgba(46, 196, 182, 0.1), transparent 60%),
+      var(--bg);
+    padding: 34px 26px 46px;
+  }
+
+  .page {
+    width: min(1280px, 100%);
+    margin: 0 auto;
+  }
+
+  header { margin-bottom: 20px; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 15px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #a9c2e6;
+    border: 1px solid rgba(120, 160, 220, 0.22);
+    border-radius: 999px;
+    background: rgba(120, 160, 220, 0.07);
+  }
+
+  .eyebrow i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 10px #38bdf8;
+    font-style: normal;
+  }
+
+  h1 {
+    margin: 16px 0 8px;
+    font-size: clamp(24px, 2.6vw, 34px);
+    letter-spacing: 1px;
+    background: linear-gradient(100deg, #ffffff, #a9c6ff 55%, #7ee0d0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    line-height: 1.9;
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 18px 0 12px;
+  }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; }
+
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .btn {
+    cursor: pointer;
+    padding: 9px 18px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #cfe0ff;
+    border: 1px solid rgba(130, 170, 240, 0.36);
+    border-radius: 999px;
+    background: rgba(90, 130, 240, 0.12);
+    transition: all 0.22s ease;
+  }
+
+  .btn:hover {
+    color: #fff;
+    border-color: rgba(170, 200, 255, 0.85);
+    background: rgba(100, 145, 255, 0.24);
+  }
+
+  .board-wrap {
+    position: relative;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(16, 26, 45, 0.92), rgba(9, 14, 26, 0.96));
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+  }
+
+  .board-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 2;
+  }
+
+  #board {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1200 / 740;
+    position: relative;
+    z-index: 1;
+    cursor: crosshair;
+  }
+
+  .tip {
+    position: absolute;
+    z-index: 5;
+    max-width: 260px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(140, 175, 240, 0.32);
+    background: rgba(10, 17, 31, 0.96);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+  }
+
+  .tip.show { opacity: 1; transform: translateY(0); }
+
+  .tip .t {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f2f7ff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tip .t i {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    font-style: normal;
+  }
+
+  .tip .s {
+    margin-top: 6px;
+    font-size: 11px;
+    color: #8fb0d8;
+    letter-spacing: 0.5px;
+  }
+
+  .tip .d {
+    margin-top: 8px;
+    font-size: 11.5px;
+    line-height: 1.75;
+    color: #9fb2cd;
+  }
+
+  footer {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    color: rgba(150, 172, 205, 0.62);
+    letter-spacing: 0.6px;
+  }
+
+  @media (max-width: 760px) {
+    body { padding: 22px 14px 32px; }
+    .legend { gap: 10px; }
+    .legend span { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="eyebrow"><i></i>高级网页设计 · <strong>18-2</strong> · Canvas 2D 绘图</div>
+      <h1>电商全站系统架构图</h1>
+      <div class="sub">五层分层架构：用户接入 → 接入分发 → 业务中台 → 异步中间件 → 数据存储。全部图形由 Canvas 2D 实时绘制，悬停节点查看职责说明。</div>
+    </header>
+
+    <div class="toolbar">
+      <div class="legend">
+        <span><i style="background:#38bdf8"></i>用户接入层</span>
+        <span><i style="background:#4f8cff"></i>接入分发层</span>
+        <span><i style="background:#b57bff"></i>业务中台</span>
+        <span><i style="background:#ffb703"></i>异步与中间件</span>
+        <span><i style="background:#2ec4b6"></i>数据存储层</span>
+      </div>
+      <button class="btn" id="toggle">暂停动画</button>
+    </div>
+
+    <div class="board-wrap" id="wrap">
+      <canvas id="board"></canvas>
+      <div class="tip" id="tip">
+        <div class="t"><i id="tipDot"></i><span id="tipTitle"></span></div>
+        <div class="s" id="tipSub"></div>
+        <div class="d" id="tipDesc"></div>
+      </div>
+    </div>
+
+    <footer>
+      <span>高梓括 · 计算机 24010 · 24001011019</span>
+      <span>移动鼠标查看节点详情 · 点击「暂停动画」可冻结数据流</span>
+    </footer>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  var canvas = document.getElementById("board");
+  var ctx = canvas.getContext("2d");
+  var wrap = document.getElementById("wrap");
+  var tip = document.getElementById("tip");
+  var tipDot = document.getElementById("tipDot");
+  var tipTitle = document.getElementById("tipTitle");
+  var tipSub = document.getElementById("tipSub");
+  var tipDesc = document.getElementById("tipDesc");
+  var toggleBtn = document.getElementById("toggle");
+
+  var DW = 1200, DH = 740;
+  var CONTENT_X = 156, CONTENT_W = 1014;
+
+  /* ---------------- 架构数据 ---------------- */
+  var LAYERS = [
+    {
+      id: "access", name: "用户接入层", en: "ACCESS", color: "#38bdf8", y: 40, h: 80,
+      nodes: [
+        { t: "PC 商城", s: "Web / SSR 首屏", d: "浏览器端门户，服务端渲染提升首屏速度，承载浏览、下单、支付全流程。" },
+        { t: "移动 App", s: "iOS · Android", d: "原生 + 混合容器，接入推送、扫码、音视频等端侧能力，支持热更新。" },
+        { t: "微信小程序", s: "H5 · 公众号", d: "社交裂变入口，承载分享、拼团、直播等场景化营销玩法。" },
+        { t: "开放 API", s: "第三方 / ISV", d: "面向商家与生态伙伴开放能力，统一签名鉴权与调用配额管理。" }
+      ]
+    },
+    {
+      id: "gateway", name: "接入分发层", en: "GATEWAY", color: "#4f8cff", y: 160, h: 80,
+      nodes: [
+        { t: "CDN 静态加速", s: "图片 · 视频 · 静态页", d: "边缘节点缓存静态资源，回源收敛带宽，就近分发降低访问延迟。" },
+        { t: "API 网关", s: "鉴权 · 限流 · 灰度", d: "统一流量入口，完成令牌鉴权、配额限流、路由灰度与协议转换。" },
+        { t: "Nginx 负载均衡", s: "四层 / 七层转发", d: "多集群流量调度与健康检查，支持同城双活与故障节点自动摘除。" }
+      ]
+    },
+    {
+      id: "service", name: "业务中台", en: "DOMAIN SERVICE", color: "#b57bff", y: 280, h: 170,
+      rows: [
+        [
+          { t: "用户中心", s: "账号 · 会员" },
+          { t: "商品中心", s: "SPU · SKU" },
+          { t: "搜索推荐", s: "召回 · 排序" },
+          { t: "购物车", s: "合并 · 促销" },
+          { t: "订单中心", s: "下单 · 履约" }
+        ],
+        [
+          { t: "支付中心", s: "支付 · 对账" },
+          { t: "库存中心", s: "扣减 · 预留" },
+          { t: "营销中心", s: "券 · 秒杀" },
+          { t: "售后服务", s: "退换 · 工单" }
+        ]
+      ]
+    },
+    {
+      id: "middle", name: "异步与中间件", en: "MIDDLEWARE", color: "#ffb703", y: 495, h: 80,
+      nodes: [
+        { t: "Kafka 消息队列", s: "订单 / 库存异步解耦", d: "削峰填谷，订单创建、库存扣减、物流通知通过事件驱动解耦。" },
+        { t: "Nacos 注册配置", s: "服务发现 · 配置中心", d: "服务注册发现与动态配置推送，支撑灰度与多环境隔离。" },
+        { t: "分布式锁 / 事务", s: "Redis · Seata", d: "秒杀防超卖与跨服务事务一致性，保证最终一致。" },
+        { t: "XXL-Job 调度", s: "对账 · 补偿任务", d: "定时对账、超时订单关闭、失败重试等补偿任务统一调度。" }
+      ]
+    },
+    {
+      id: "data", name: "数据存储层", en: "DATA", color: "#2ec4b6", y: 620, h: 80,
+      nodes: [
+        { t: "MySQL 集群", s: "分库分表 · 主从", d: "交易类核心数据，按用户与订单维度分库分表，主从读写分离。" },
+        { t: "Redis 缓存", s: "热点数据 · 会话", d: "商品详情、购物车、秒杀库存等热点数据缓存，QPS 弹性支撑。" },
+        { t: "Elasticsearch", s: "商品 / 日志检索", d: "商品全文检索与多维筛选，同时承担日志与链路检索。" },
+        { t: "OSS 对象存储", s: "图片 / 视频", d: "商品图片、短视频与静态附件存储，配合 CDN 回源。" },
+        { t: "ClickHouse 数仓", s: "实时报表", d: "埋点与交易明细实时聚合，支撑经营看板与实时大屏。" }
+      ]
+    }
+  ];
+
+  /* ---------------- 布局 ---------------- */
+  var nodes = [];
+  var segments = [];
+  var buses = [];
+
+  function buildLayout() {
+    nodes = [];
+    LAYERS.forEach(function (layer) {
+      var rows = layer.rows || [layer.nodes];
+      var maxN = 1;
+      rows.forEach(function (r) { maxN = Math.max(maxN, r.length); });
+
+      var rowH = 48;
+      var gapX = 20;
+      var gapY = 14;
+      var totalH = rows.length * rowH + (rows.length - 1) * gapY;
+      var top = layer.y + (layer.h - totalH) / 2;
+      var w = (CONTENT_W - (maxN - 1) * gapX) / maxN;
+
+      rows.forEach(function (row, ri) {
+        var rowW = row.length * w + (row.length - 1) * gapX;
+        var offset = CONTENT_X + (CONTENT_W - rowW) / 2;
+        var cy = top + ri * (rowH + gapY) + rowH / 2;
+
+        row.forEach(function (item, ci) {
+          nodes.push({
+            id: layer.id + "-" + ri + "-" + ci,
+            layerId: layer.id,
+            color: layer.color,
+            label: item.t,
+            sub: item.s || "",
+            desc: item.d || "该模块由 " + layer.name + " 统一纳管，按业务域独立部署与弹性扩缩容。",
+            x: offset + ci * (w + gapX),
+            y: cy - rowH / 2,
+            w: w,
+            h: rowH,
+            cx: offset + ci * (w + gapX) + w / 2,
+            cy: cy
+          });
+        });
+      });
+    });
+  }
+
+  function buildEdges() {
+    segments = [];
+    buses = [];
+
+    for (var i = 0; i < LAYERS.length - 1; i++) {
+      var a = LAYERS[i];
+      var b = LAYERS[i + 1];
+      var busY = (a.y + a.h + b.y) / 2;
+      var na = nodes.filter(function (n) { return n.layerId === a.id; });
+      var nb = nodes.filter(function (n) { return n.layerId === b.id; });
+
+      na.forEach(function (n, idx) {
+        segments.push({
+          x1: n.cx, y1: n.y + n.h, x2: n.cx, y2: busY,
+          color: a.color, speed: 0.34 + (idx % 3) * 0.07, off: Math.random()
+        });
+      });
+
+      nb.forEach(function (n, idx) {
+        segments.push({
+          x1: n.cx, y1: busY, x2: n.cx, y2: n.y,
+          color: b.color, speed: 0.4 + (idx % 3) * 0.06, off: Math.random()
+        });
+      });
+
+      var xs = na.map(function (n) { return n.cx; }).concat(nb.map(function (n) { return n.cx; }));
+      buses.push({
+        y: busY,
+        x1: Math.min.apply(null, xs),
+        x2: Math.max.apply(null, xs),
+        color: a.color
+      });
+    }
+  }
+
+  /* ---------------- 工具 ---------------- */
+  function hexA(hex, a) {
+    var h = hex.replace("#", "");
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var r = parseInt(h.slice(0, 2), 16);
+    var g = parseInt(h.slice(2, 4), 16);
+    var b = parseInt(h.slice(4, 6), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    var rr = Math.min(r, w / 2, h / 2);
+    c.beginPath();
+    c.moveTo(x + rr, y);
+    c.lineTo(x + w - rr, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + rr);
+    c.lineTo(x + w, y + h - rr);
+    c.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    c.lineTo(x + rr, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - rr);
+    c.lineTo(x, y + rr);
+    c.quadraticCurveTo(x, y, x + rr, y);
+    c.closePath();
+  }
+
+  var sprites = {};
+  function getSprite(color) {
+    if (sprites[color]) return sprites[color];
+    var size = 34;
+    var c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    var g = c.getContext("2d");
+    var rg = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    rg.addColorStop(0, "rgba(255,255,255,0.95)");
+    rg.addColorStop(0.22, hexA(color, 0.95));
+    rg.addColorStop(0.55, hexA(color, 0.35));
+    rg.addColorStop(1, hexA(color, 0));
+    g.fillStyle = rg;
+    g.fillRect(0, 0, size, size);
+    sprites[color] = c;
+    return c;
+  }
+
+  /* ---------------- 视图 ---------------- */
+  var view = { k: 1, ox: 0, oy: 0 };
+  var dpr = 1;
+
+  function resize() {
+    var rect = canvas.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    view.k = Math.min(canvas.width / DW, canvas.height / DH);
+    view.ox = (canvas.width - DW * view.k) / 2;
+    view.oy = (canvas.height - DH * view.k) / 2;
+  }
+
+  /* ---------------- 绘制 ---------------- */
+  function drawBackdrop() {
+    var bg = ctx.createLinearGradient(0, 0, DW, DH);
+    bg.addColorStop(0, "rgba(13,22,40,0.96)");
+    bg.addColorStop(0.55, "rgba(9,15,29,0.98)");
+    bg.addColorStop(1, "rgba(12,19,34,0.99)");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, DW, DH);
+
+    var glow = ctx.createRadialGradient(180, 60, 0, 180, 60, 620);
+    glow.addColorStop(0, "rgba(56,189,248,0.16)");
+    glow.addColorStop(1, "rgba(56,189,248,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, DW, DH);
+
+    var glow2 = ctx.createRadialGradient(1050, 700, 0, 1050, 700, 560);
+    glow2.addColorStop(0, "rgba(46,196,182,0.13)");
+    glow2.addColorStop(1, "rgba(46,196,182,0)");
+    ctx.fillStyle = glow2;
+    ctx.fillRect(0, 0, DW, DH);
+  }
+
+  function drawBand(layer, index) {
+    roundRect(ctx, 20, layer.y, 1160, layer.h, 16);
+    ctx.fillStyle = hexA(layer.color, 0.055);
+    ctx.fill();
+    ctx.strokeStyle = hexA(layer.color, 0.18);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 左侧色条
+    roundRect(ctx, 34, layer.y + 16, 3, layer.h - 32, 2);
+    ctx.fillStyle = hexA(layer.color, 0.85);
+    ctx.fill();
+
+    var cy = layer.y + layer.h / 2;
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    ctx.fillStyle = hexA(layer.color, 0.55);
+    ctx.font = "600 10px 'Consolas', monospace";
+    ctx.fillText("0" + (index + 1), 56, cy - 30);
+
+    ctx.fillStyle = "#e6edfa";
+    ctx.font = "700 15px 'Microsoft YaHei', sans-serif";
+    ctx.fillText(layer.name, 56, cy - 6);
+
+    ctx.fillStyle = hexA(layer.color, 0.6);
+    ctx.font = "600 9px 'Consolas', monospace";
+    ctx.fillText(layer.en, 56, cy + 15);
+  }
+
+  function drawNode(n, hovered) {
+    ctx.save();
+
+    roundRect(ctx, n.x, n.y, n.w, n.h, 12);
+    if (hovered) {
+      ctx.shadowColor = hexA(n.color, 0.6);
+      ctx.shadowBlur = 22;
+    }
+    ctx.fillStyle = hovered ? hexA(n.color, 0.2) : "rgba(12, 21, 38, 0.9)";
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = hovered ? n.color : hexA(n.color, 0.4);
+    ctx.lineWidth = hovered ? 1.6 : 1;
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = hovered ? "#ffffff" : "#e2ebfa";
+    ctx.font = "600 13.5px 'Microsoft YaHei', sans-serif";
+
+    if (n.sub) {
+      ctx.fillText(n.label, n.cx, n.cy - 8);
+      ctx.fillStyle = hovered ? hexA(n.color, 0.95) : "rgba(140, 165, 200, 0.85)";
+      ctx.font = "400 10px 'Microsoft YaHei', sans-serif";
+      ctx.fillText(n.sub, n.cx, n.cy + 11);
+    } else {
+      ctx.fillText(n.label, n.cx, n.cy);
+    }
+
+    // 顶部高光
+    roundRect(ctx, n.x + 12, n.y + 1.2, n.w - 24, 1.2, 0.6);
+    ctx.fillStyle = hexA(n.color, hovered ? 0.8 : 0.3);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawWires(t) {
+    // 总线
+    for (var i = 0; i < buses.length; i++) {
+      var bus = buses[i];
+      var lg = ctx.createLinearGradient(bus.x1, 0, bus.x2, 0);
+      lg.addColorStop(0, hexA(bus.color, 0.05));
+      lg.addColorStop(0.5, hexA(bus.color, 0.32));
+      lg.addColorStop(1, hexA(bus.color, 0.05));
+      ctx.strokeStyle = lg;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(bus.x1, bus.y);
+      ctx.lineTo(bus.x2, bus.y);
+      ctx.stroke();
+    }
+
+    // 连线
+    for (var s = 0; s < segments.length; s++) {
+      var seg = segments[s];
+      ctx.strokeStyle = hexA(seg.color, 0.16);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(seg.x2, seg.y2);
+      ctx.stroke();
+    }
+
+    // 流动数据点
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (var k = 0; k < segments.length; k++) {
+      var sg = segments[k];
+      var p = (t * sg.speed + sg.off) % 1;
+      var x = sg.x1 + (sg.x2 - sg.x1) * p;
+      var y = sg.y1 + (sg.y2 - sg.y1) * p;
+      var sprite = getSprite(sg.color);
+      var size = 13;
+      ctx.globalAlpha = 0.9;
+      ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
+    }
+    ctx.restore();
+  }
+
+  var last = 0, clock = 0, paused = false, hoverNode = null;
+
+  function frame(now) {
+    if (!last) last = now;
+    var dt = Math.min(64, now - last);
+    last = now;
+    if (!paused) clock += dt / 1000;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(view.k, 0, 0, view.k, view.ox, view.oy);
+
+    drawBackdrop();
+
+    for (var i = 0; i < LAYERS.length; i++) drawBand(LAYERS[i], i);
+    drawWires(clock);
+    for (var n = 0; n < nodes.length; n++) drawNode(nodes[n], nodes[n] === hoverNode);
+
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------------- 交互 ---------------- */
+  function toLogical(e) {
+    var rect = canvas.getBoundingClientRect();
+    var px = (e.clientX - rect.left) * dpr;
+    var py = (e.clientY - rect.top) * dpr;
+    return { x: (px - view.ox) / view.k, y: (py - view.oy) / view.k };
+  }
+
+  function hitTest(x, y) {
+    for (var i = nodes.length - 1; i >= 0; i--) {
+      var n = nodes[i];
+      if (x >= n.x && x <= n.x + n.w && y >= n.y && y <= n.y + n.h) return n;
+    }
+    return null;
+  }
+
+  function showTip(n, e) {
+    tipDot.style.background = n.color;
+    tipTitle.textContent = n.label;
+    tipSub.textContent = n.sub ? n.sub + " · " + n.layerId : n.layerId;
+    tipDesc.textContent = n.desc;
+    tip.classList.add("show");
+
+    var wr = wrap.getBoundingClientRect();
+    var x = e.clientX - wr.left + 16;
+    var y = e.clientY - wr.top + 16;
+    var maxX = wr.width - tip.offsetWidth - 12;
+    var maxY = wr.height - tip.offsetHeight - 12;
+    tip.style.left = Math.max(10, Math.min(x, maxX)) + "px";
+    tip.style.top = Math.max(10, Math.min(y, maxY)) + "px";
+  }
+
+  canvas.addEventListener("pointermove", function (e) {
+    var p = toLogical(e);
+    var n = hitTest(p.x, p.y);
+    hoverNode = n;
+    if (n) {
+      canvas.style.cursor = "pointer";
+      showTip(n, e);
+    } else {
+      canvas.style.cursor = "crosshair";
+      tip.classList.remove("show");
+    }
+  });
+
+  canvas.addEventListener("pointerleave", function () {
+    hoverNode = null;
+    tip.classList.remove("show");
+    canvas.style.cursor = "crosshair";
+  });
+
+  toggleBtn.addEventListener("click", function () {
+    paused = !paused;
+    toggleBtn.textContent = paused ? "继续动画" : "暂停动画";
+  });
+
+  /* ---------------- 初始化 ---------------- */
+  buildLayout();
+  buildEdges();
+
+  var rt = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(resize, 120);
+  });
+
+  resize();
+  requestAnimationFrame(function (t) {
+    last = t;
+    requestAnimationFrame(frame);
+  });
+})();
+</script>
+</body>
+</html>

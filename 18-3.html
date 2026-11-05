@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>18-3 高梓括 · 基于知识库的智能客服系统架构图（SVG）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #16233a;
+    --muted: #64748b;
+    --line: #e3eaf4;
+    --blue: #1d4ed8;
+    --paper: #ffffff;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 38px 24px 56px;
+    color: var(--ink);
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    background:
+      radial-gradient(1100px 620px at 8% -12%, rgba(29, 78, 216, 0.1), transparent 62%),
+      radial-gradient(900px 560px at 96% 4%, rgba(5, 150, 105, 0.1), transparent 60%),
+      #f4f7fc;
+  }
+
+  .page { width: min(1320px, 100%); margin: 0 auto; }
+
+  header { margin-bottom: 24px; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 15px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #3559a8;
+    border: 1px solid rgba(29, 78, 216, 0.18);
+    border-radius: 999px;
+    background: rgba(29, 78, 216, 0.06);
+  }
+
+  .eyebrow i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--blue);
+    box-shadow: 0 0 8px rgba(29, 78, 216, 0.8);
+    font-style: normal;
+  }
+
+  h1 {
+    margin: 16px 0 10px;
+    font-size: clamp(24px, 2.5vw, 34px);
+    letter-spacing: 1px;
+    color: #101d33;
+  }
+
+  .sub {
+    font-size: 13.5px;
+    line-height: 1.95;
+    color: var(--muted);
+    max-width: 900px;
+  }
+
+  .chart {
+    margin-top: 22px;
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    box-shadow: 0 24px 60px rgba(23, 48, 92, 0.09), 0 2px 6px rgba(23, 48, 92, 0.04);
+  }
+
+  .chart svg { display: block; width: 100%; height: auto; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    padding: 14px 6px 2px;
+    border-top: 1px solid var(--line);
+    margin-top: 10px;
+  }
+
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend i {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  /* ---------------- 科研方向 ---------------- */
+  .research { margin-top: 40px; }
+
+  .research-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .research-head h2 {
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    color: #101d33;
+  }
+
+  .research-head p { font-size: 12.5px; color: var(--muted); }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    position: relative;
+    padding: 22px 22px 20px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, #ffffff, #fbfdff);
+    overflow: hidden;
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+  }
+
+  .card::after {
+    content: "";
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--glow, rgba(29, 78, 216, 0.16)), transparent 70%);
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: #cfdcf1;
+    box-shadow: 0 18px 36px rgba(23, 48, 92, 0.1);
+  }
+
+  .card .no {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #93a4bd;
+    font-weight: 700;
+  }
+
+  .card h3 {
+    margin: 8px 0 10px;
+    font-size: 16.5px;
+    color: #14233c;
+    letter-spacing: 0.3px;
+  }
+
+  .card p {
+    font-size: 12.8px;
+    line-height: 1.85;
+    color: #64748b;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+  }
+
+  .tags span {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: #40587d;
+    background: #eef4fd;
+    border: 1px solid #dde9f8;
+  }
+
+  .metrics {
+    margin-top: 16px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    border: 1px solid #dbe7f7;
+    background: linear-gradient(100deg, #f2f7ff, #f7fbff);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 26px;
+    font-size: 12.5px;
+    color: #40587d;
+  }
+
+  .metrics b { color: #16305c; letter-spacing: 0.5px; }
+
+  .metrics span::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #2f6bd8;
+    margin-right: 8px;
+    vertical-align: 2px;
+  }
+
+  footer {
+    margin-top: 34px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: #8ea0b8;
+    letter-spacing: 0.6px;
+  }
+
+  @media (max-width: 860px) {
+    body { padding: 24px 14px 40px; }
+    .cards { grid-template-columns: 1fr; }
+    .chart { padding: 10px; border-radius: 16px; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="eyebrow"><i></i>高级网页设计 · <strong>18-3</strong> · SVG 矢量架构图</div>
+      <h1>基于知识库的智能客服系统 · 系统架构图</h1>
+      <div class="sub">以「渠道接入 → 接入会话 → 对话理解 → 知识检索增强（RAG） → 大模型服务 → 业务与人工协同」为主链路，底部由数据与知识底座支撑，形成可回溯、可评测的闭环。全图使用 SVG 矢量绘制，可无损缩放。</div>
+    </header>
+
+    <section class="chart">
+      <svg viewBox="0 0 1280 820" role="img" aria-labelledby="svgTitle svgDesc" xmlns="http://www.w3.org/2000/svg">
+        <title id="svgTitle">基于知识库的智能客服系统架构图</title>
+        <desc id="svgDesc">六层主链路加数据知识底座与安全可观测保障的智能客服系统架构。</desc>
+
+        <defs>
+          <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M32 0 H0 V32" fill="none" stroke="#eef3f9" stroke-width="1" />
+          </pattern>
+
+          <filter id="soft" x="-20%" y="-20%" width="140%" height="150%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#1b3a63" flood-opacity="0.07" />
+          </filter>
+
+          <marker id="arwSky" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#0ea5e9" />
+          </marker>
+          <marker id="arwBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#2563eb" />
+          </marker>
+          <marker id="arwViolet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#7c3aed" />
+          </marker>
+          <marker id="arwGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#059669" />
+          </marker>
+          <marker id="arwAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#d97706" />
+          </marker>
+          <marker id="arwSlate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#94a3b8" />
+          </marker>
+        </defs>
+
+        <style>
+          .band-body { fill: #ffffff; stroke: #e8eef7; stroke-width: 1; }
+          .hdr-text { font: 700 13.5px "Microsoft YaHei", "PingFang SC", sans-serif; text-anchor: middle; }
+          .nt { font: 700 13px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #1e2f47; text-anchor: middle; }
+          .ns { font: 400 9.8px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #7b8ca4; text-anchor: middle; }
+          .node rect.nb { fill: #ffffff; stroke: #e3eaf4; stroke-width: 1; }
+          .node { transition: filter .2s ease; }
+          .node:hover { filter: drop-shadow(0 6px 14px rgba(23, 48, 92, 0.16)); }
+          .node:hover rect.nb { stroke: #b9cbe6; }
+          .node:hover .nt { fill: #0b1729; }
+          .flow { stroke-dasharray: 7 9; animation: dashMove 1.5s linear infinite; fill: none; }
+          @keyframes dashMove { to { stroke-dashoffset: -32; } }
+          @media (prefers-reduced-motion: reduce) { .flow { animation: none; } }
+          .note { font: 400 11px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #7f91a9; }
+        </style>
+
+        <rect width="1280" height="820" fill="#fbfdff" />
+        <rect width="1280" height="820" fill="url(#grid)" />
+
+        <!-- ===== 反馈闭环 ===== -->
+        <path d="M1140 56 C1140 18 736 18 736 56" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5 6" marker-end="url(#arwSlate)" />
+        <text x="938" y="13" class="note" text-anchor="middle">反馈闭环：badcase · 会话质检结果 → 知识库 / Prompt / 模型迭代</text>
+
+        <!-- ===== 01 渠道接入层 ===== -->
+        <text x="130" y="82" class="hdr-text" fill="#0369a1">渠道接入层</text>
+        <rect x="90" y="91" width="80" height="3" rx="1.5" fill="#0ea5e9" opacity="0.55" />
+        <rect x="40" y="104" width="180" height="402" rx="14" class="band-body" opacity="0.7" />
+
+        <g class="node">
+          <rect class="nb" x="50" y="122" width="160" height="60" rx="10" />
+          <rect x="50" y="122" width="4" height="60" rx="2" fill="#0ea5e9" opacity="0.85" />
+          <text x="130" y="148" class="nt">网页在线客服</text>
+          <text x="130" y="167" class="ns">Web Widget</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="50" y="196" width="160" height="60" rx="10" />
+          <rect x="50" y="196" width="4" height="60" rx="2" fill="#0ea5e9" opacity="0.85" />
+          <text x="130" y="222" class="nt">App · SDK</text>
+          <text x="130" y="241" class="ns">iOS · Android</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="50" y="270" width="160" height="60" rx="10" />
+          <rect x="50" y="270" width="4" height="60" rx="2" fill="#0ea5e9" opacity="0.85" />
+          <text x="130" y="296" class="nt">微信 · 企业微信</text>
+          <text x="130" y="315" class="ns">公众号 · 企微</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="50" y="344" width="160" height="60" rx="10" />
+          <rect x="50" y="344" width="4" height="60" rx="2" fill="#0ea5e9" opacity="0.85" />
+          <text x="130" y="370" class="nt">电话 · IVR</text>
+          <text x="130" y="389" class="ns">语音转写 ASR</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="50" y="418" width="160" height="60" rx="10" />
+          <rect x="50" y="418" width="4" height="60" rx="2" fill="#0ea5e9" opacity="0.85" />
+          <text x="130" y="444" class="nt">开放 API</text>
+          <text x="130" y="463" class="ns">第三方系统接入</text>
+        </g>
+
+        <!-- ===== 02 接入与会话层 ===== -->
+        <text x="332" y="82" class="hdr-text" fill="#1d4ed8">接入与会话层</text>
+        <rect x="292" y="91" width="80" height="3" rx="1.5" fill="#2563eb" opacity="0.55" />
+        <rect x="242" y="104" width="180" height="402" rx="14" class="band-body" opacity="0.7" />
+
+        <g class="node">
+          <rect class="nb" x="252" y="122" width="160" height="60" rx="10" />
+          <rect x="252" y="122" width="4" height="60" rx="2" fill="#2563eb" opacity="0.85" />
+          <text x="332" y="148" class="nt">统一接入网关</text>
+          <text x="332" y="167" class="ns">鉴权 · 限流 · 灰度</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="252" y="196" width="160" height="60" rx="10" />
+          <rect x="252" y="196" width="4" height="60" rx="2" fill="#2563eb" opacity="0.85" />
+          <text x="332" y="222" class="nt">会话上下文管理</text>
+          <text x="332" y="241" class="ns">多轮上下文存储</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="252" y="270" width="160" height="60" rx="10" />
+          <rect x="252" y="270" width="4" height="60" rx="2" fill="#2563eb" opacity="0.85" />
+          <text x="332" y="296" class="nt">意图路由分流</text>
+          <text x="332" y="315" class="ns">技能组 · 业务线</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="252" y="344" width="160" height="60" rx="10" />
+          <rect x="252" y="344" width="4" height="60" rx="2" fill="#2563eb" opacity="0.85" />
+          <text x="332" y="370" class="nt">多轮会话状态机</text>
+          <text x="332" y="389" class="ns">断点恢复 · 超时</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="252" y="418" width="160" height="60" rx="10" />
+          <rect x="252" y="418" width="4" height="60" rx="2" fill="#2563eb" opacity="0.85" />
+          <text x="332" y="444" class="nt">消息队列缓冲</text>
+          <text x="332" y="463" class="ns">削峰 · 重试 · 顺序</text>
+        </g>
+
+        <!-- ===== 03 对话理解与编排 ===== -->
+        <text x="534" y="82" class="hdr-text" fill="#6d28d9">对话理解与编排</text>
+        <rect x="494" y="91" width="80" height="3" rx="1.5" fill="#7c3aed" opacity="0.55" />
+        <rect x="444" y="104" width="180" height="402" rx="14" class="band-body" opacity="0.7" />
+
+        <g class="node">
+          <rect class="nb" x="454" y="122" width="160" height="60" rx="10" />
+          <rect x="454" y="122" width="4" height="60" rx="2" fill="#7c3aed" opacity="0.85" />
+          <text x="534" y="148" class="nt">意图识别 NLU</text>
+          <text x="534" y="167" class="ns">分类 · 置信度</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="454" y="196" width="160" height="60" rx="10" />
+          <rect x="454" y="196" width="4" height="60" rx="2" fill="#7c3aed" opacity="0.85" />
+          <text x="534" y="222" class="nt">实体槽位抽取</text>
+          <text x="534" y="241" class="ns">关键信息补齐</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="454" y="270" width="160" height="60" rx="10" />
+          <rect x="454" y="270" width="4" height="60" rx="2" fill="#7c3aed" opacity="0.85" />
+          <text x="534" y="296" class="nt">多轮对话管理 DM</text>
+          <text x="534" y="315" class="ns">追问 · 澄清 · 纠错</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="454" y="344" width="160" height="60" rx="10" />
+          <rect x="454" y="344" width="4" height="60" rx="2" fill="#7c3aed" opacity="0.85" />
+          <text x="534" y="370" class="nt">情感与风险识别</text>
+          <text x="534" y="389" class="ns">投诉 · 舆情预警</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="454" y="418" width="160" height="60" rx="10" />
+          <rect x="454" y="418" width="4" height="60" rx="2" fill="#7c3aed" opacity="0.85" />
+          <text x="534" y="444" class="nt">Agent 任务编排</text>
+          <text x="534" y="463" class="ns">多工具链协同</text>
+        </g>
+
+        <!-- ===== 04 知识检索增强 RAG ===== -->
+        <text x="736" y="82" class="hdr-text" fill="#047857">知识检索增强（RAG）</text>
+        <rect x="696" y="91" width="80" height="3" rx="1.5" fill="#059669" opacity="0.55" />
+        <rect x="646" y="104" width="180" height="402" rx="14" class="band-body" opacity="0.7" />
+
+        <g class="node">
+          <rect class="nb" x="656" y="122" width="160" height="60" rx="10" />
+          <rect x="656" y="122" width="4" height="60" rx="2" fill="#059669" opacity="0.85" />
+          <text x="736" y="148" class="nt">查询改写扩展</text>
+          <text x="736" y="167" class="ns">同义 · 指代消解</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="656" y="196" width="160" height="60" rx="10" />
+          <rect x="656" y="196" width="4" height="60" rx="2" fill="#059669" opacity="0.85" />
+          <text x="736" y="222" class="nt">混合召回</text>
+          <text x="736" y="241" class="ns">向量 + BM25</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="656" y="270" width="160" height="60" rx="10" />
+          <rect x="656" y="270" width="4" height="60" rx="2" fill="#059669" opacity="0.85" />
+          <text x="736" y="296" class="nt">重排序 Rerank</text>
+          <text x="736" y="315" class="ns">精排 Top-K 片段</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="656" y="344" width="160" height="60" rx="10" />
+          <rect x="656" y="344" width="4" height="60" rx="2" fill="#059669" opacity="0.85" />
+          <text x="736" y="370" class="nt">知识库检索</text>
+          <text x="736" y="389" class="ns">FAQ · 文档 · 工单</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="656" y="418" width="160" height="60" rx="10" />
+          <rect x="656" y="418" width="4" height="60" rx="2" fill="#059669" opacity="0.85" />
+          <text x="736" y="444" class="nt">引用溯源校验</text>
+          <text x="736" y="463" class="ns">可信度打分</text>
+        </g>
+
+        <!-- ===== 05 大模型服务层 ===== -->
+        <text x="938" y="82" class="hdr-text" fill="#b45309">大模型服务层</text>
+        <rect x="898" y="91" width="80" height="3" rx="1.5" fill="#d97706" opacity="0.55" />
+        <rect x="848" y="104" width="180" height="402" rx="14" class="band-body" opacity="0.7" />
+
+        <g class="node">
+          <rect class="nb" x="858" y="122" width="160" height="60" rx="10" />
+          <rect x="858" y="122" width="4" height="60" rx="2" fill="#d97706" opacity="0.85" />
+          <text x="938" y="148" class="nt">LLM 推理集群</text>
+          <text x="938" y="167" class="ns">私有化 · 多模型</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="858" y="196" width="160" height="60" rx="10" />
+          <rect x="858" y="196" width="4" height="60" rx="2" fill="#d97706" opacity="0.85" />
+          <text x="938" y="222" class="nt">Prompt 模板管理</text>
+          <text x="938" y="241" class="ns">场景化编排</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="858" y="270" width="160" height="60" rx="10" />
+          <rect x="858" y="270" width="4" height="60" rx="2" fill="#d97706" opacity="0.85" />
+          <text x="938" y="296" class="nt">Function Call</text>
+          <text x="938" y="315" class="ns">业务工具调用</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="858" y="344" width="160" height="60" rx="10" />
+          <rect x="858" y="344" width="4" height="60" rx="2" fill="#d97706" opacity="0.85" />
+          <text x="938" y="370" class="nt">生成式答案合成</text>
+          <text x="938" y="389" class="ns">流式输出</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="858" y="418" width="160" height="60" rx="10" />
+          <rect x="858" y="418" width="4" height="60" rx="2" fill="#d97706" opacity="0.85" />
+          <text x="938" y="444" class="nt">安全合规过滤</text>
+          <text x="938" y="463" class="ns">敏感词 · 越权防护</text>
+        </g>
+
+        <!-- ===== 06 业务与人工协同 ===== -->
+        <text x="1140" y="82" class="hdr-text" fill="#be185d">业务与人工协同</text>
+        <rect x="1100" y="91" width="80" height="3" rx="1.5" fill="#db2777" opacity="0.55" />
+        <rect x="1050" y="104" width="180" height="402" rx="14" class="band-body" opacity="0.7" />
+
+        <g class="node">
+          <rect class="nb" x="1060" y="122" width="160" height="60" rx="10" />
+          <rect x="1060" y="122" width="4" height="60" rx="2" fill="#db2777" opacity="0.85" />
+          <text x="1140" y="148" class="nt">人工坐席工作台</text>
+          <text x="1140" y="167" class="ns">无缝转人工</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="1060" y="196" width="160" height="60" rx="10" />
+          <rect x="1060" y="196" width="4" height="60" rx="2" fill="#db2777" opacity="0.85" />
+          <text x="1140" y="222" class="nt">工单流转系统</text>
+          <text x="1140" y="241" class="ns">升级 · 派单 · 回访</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="1060" y="270" width="160" height="60" rx="10" />
+          <rect x="1060" y="270" width="4" height="60" rx="2" fill="#db2777" opacity="0.85" />
+          <text x="1140" y="296" class="nt">CRM 客户视图</text>
+          <text x="1140" y="315" class="ns">画像 · 订单 · 历史</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="1060" y="344" width="160" height="60" rx="10" />
+          <rect x="1060" y="344" width="4" height="60" rx="2" fill="#db2777" opacity="0.85" />
+          <text x="1140" y="370" class="nt">质检与运营分析</text>
+          <text x="1140" y="389" class="ns">全量会话质检</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="1060" y="418" width="160" height="60" rx="10" />
+          <rect x="1060" y="418" width="4" height="60" rx="2" fill="#db2777" opacity="0.85" />
+          <text x="1140" y="444" class="nt">知识标注回流</text>
+          <text x="1140" y="463" class="ns">badcase 沉淀</text>
+        </g>
+
+        <!-- ===== 列间数据流 ===== -->
+        <path class="flow" d="M222 152 H240" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arwBlue)" />
+        <path class="flow" d="M222 300 H240" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arwBlue)" />
+        <path class="flow" d="M222 448 H240" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arwBlue)" />
+
+        <path class="flow" d="M424 152 H442" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#arwViolet)" />
+        <path class="flow" d="M424 300 H442" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#arwViolet)" />
+        <path class="flow" d="M424 448 H442" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#arwViolet)" />
+
+        <path class="flow" d="M626 152 H644" stroke="#059669" stroke-width="1.6" marker-end="url(#arwGreen)" />
+        <path class="flow" d="M626 300 H644" stroke="#059669" stroke-width="1.6" marker-end="url(#arwGreen)" />
+        <path class="flow" d="M626 448 H644" stroke="#059669" stroke-width="1.6" marker-end="url(#arwGreen)" />
+
+        <path class="flow" d="M828 152 H846" stroke="#d97706" stroke-width="1.6" marker-end="url(#arwAmber)" />
+        <path class="flow" d="M828 300 H846" stroke="#d97706" stroke-width="1.6" marker-end="url(#arwAmber)" />
+        <path class="flow" d="M828 448 H846" stroke="#d97706" stroke-width="1.6" marker-end="url(#arwAmber)" />
+
+        <path class="flow" d="M1030 152 H1048" stroke="#db2777" stroke-width="1.6" marker-end="url(#arwSlate)" />
+        <path class="flow" d="M1030 300 H1048" stroke="#db2777" stroke-width="1.6" marker-end="url(#arwSlate)" />
+        <path class="flow" d="M1030 448 H1048" stroke="#db2777" stroke-width="1.6" marker-end="url(#arwSlate)" />
+
+        <!-- ===== 数据与知识底座 ===== -->
+        <path d="M736 508 V552" class="flow" stroke="#059669" stroke-width="1.6" marker-end="url(#arwGreen)" />
+        <text x="746" y="534" class="note">知识检索 / 索引更新</text>
+
+        <path d="M938 508 V552" class="flow" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arwSlate)" />
+        <text x="948" y="534" class="note">会话日志落库</text>
+
+        <path d="M1140 508 V552" class="flow" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arwSlate)" />
+        <text x="1150" y="534" class="note">标注回流</text>
+
+        <rect x="40" y="556" width="1190" height="156" rx="16" fill="#eef4fa" stroke="#dce7f2" />
+        <text x="60" y="585" font-size="13" font-weight="700" fill="#334155" font-family="Microsoft YaHei, sans-serif">数据与知识底座</text>
+        <text x="196" y="585" font-size="9.5" fill="#8ea1b8" letter-spacing="1.4" font-family="Consolas, monospace">DATA &amp; KNOWLEDGE BASE</text>
+
+        <g class="node">
+          <rect class="nb" x="60" y="600" width="217" height="80" rx="10" />
+          <rect x="60" y="600" width="4" height="80" rx="2" fill="#0ea5e9" opacity="0.8" />
+          <text x="168" y="632" class="nt">文档解析与切分</text>
+          <text x="168" y="652" class="ns">PDF · Word · 网页 → 语义块</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="293" y="600" width="217" height="80" rx="10" />
+          <rect x="293" y="600" width="4" height="80" rx="2" fill="#059669" opacity="0.8" />
+          <text x="401" y="632" class="nt">向量数据库</text>
+          <text x="401" y="652" class="ns">Milvus · pgvector · HNSW</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="526" y="600" width="217" height="80" rx="10" />
+          <rect x="526" y="600" width="4" height="80" rx="2" fill="#7c3aed" opacity="0.8" />
+          <text x="634" y="632" class="nt">知识图谱</text>
+          <text x="634" y="652" class="ns">实体 · 关系 · 业务规则</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="759" y="600" width="217" height="80" rx="10" />
+          <rect x="759" y="600" width="4" height="80" rx="2" fill="#d97706" opacity="0.8" />
+          <text x="867" y="632" class="nt">会话日志与埋点</text>
+          <text x="867" y="652" class="ns">全链路 Trace · 对话存档</text>
+        </g>
+        <g class="node">
+          <rect class="nb" x="992" y="600" width="217" height="80" rx="10" />
+          <rect x="992" y="600" width="4" height="80" rx="2" fill="#db2777" opacity="0.8" />
+          <text x="1100" y="632" class="nt">指标监控与评测</text>
+          <text x="1100" y="652" class="ns">解决率 · 满意度 · 幻觉率</text>
+        </g>
+
+        <!-- ===== 安全与可观测 ===== -->
+        <rect x="40" y="730" width="1190" height="64" rx="14" fill="#ffffff" stroke="#e6ecf5" />
+        <text x="60" y="768" font-size="13" font-weight="700" fill="#334155" font-family="Microsoft YaHei, sans-serif">安全 · 合规 · 可观测</text>
+        <text x="380" y="768" class="note" text-anchor="middle">数据脱敏与隐私计算</text>
+        <text x="550" y="768" class="note" text-anchor="middle">内容安全与合规审核</text>
+        <text x="720" y="768" class="note" text-anchor="middle">全链路追踪 Trace</text>
+        <text x="900" y="768" class="note" text-anchor="middle">灰度发布与快速回滚</text>
+        <text x="1080" y="768" class="note" text-anchor="middle">效果评测与归因闭环</text>
+      </svg>
+
+      <div class="legend">
+        <span><i style="background:#0ea5e9"></i>渠道接入</span>
+        <span><i style="background:#2563eb"></i>接入会话</span>
+        <span><i style="background:#7c3aed"></i>对话理解</span>
+        <span><i style="background:#059669"></i>知识检索 RAG</span>
+        <span><i style="background:#d97706"></i>大模型服务</span>
+        <span><i style="background:#db2777"></i>业务与人工</span>
+        <span><i style="background:#94a3b8"></i>数据与保障</span>
+      </div>
+    </section>
+
+    <section class="research">
+      <div class="research-head">
+        <h2>科研方向拓展</h2>
+        <p>围绕「可信 · 可解释 · 可迁移」的智能客服关键技术研究</p>
+      </div>
+
+      <div class="cards">
+        <article class="card" style="--glow: rgba(14,165,233,0.2)">
+          <div class="no">DIRECTION 01</div>
+          <h3>多模态情感计算与意图识别</h3>
+          <p>融合文本语义、语音韵律与视觉表情的多模态特征，构建细粒度情绪与投诉风险识别模型，实现高风险会话的提前预警与安抚话术生成。</p>
+          <div class="tags"><span>多模态融合</span><span>情感计算</span><span>风险预警</span></div>
+        </article>
+
+        <article class="card" style="--glow: rgba(5,150,105,0.2)">
+          <div class="no">DIRECTION 02</div>
+          <h3>领域知识图谱与 RAG 融合推理</h3>
+          <p>以业务知识图谱约束检索路径，将结构化关系与无结构文档统一到检索增强框架中，缓解垂直领域长尾问题的召回缺失与答非所问。</p>
+          <div class="tags"><span>知识图谱</span><span>混合检索</span><span>GraphRAG</span></div>
+        </article>
+
+        <article class="card" style="--glow: rgba(217,119,6,0.2)">
+          <div class="no">DIRECTION 03</div>
+          <h3>大模型幻觉抑制与可信评估</h3>
+          <p>研究引用溯源、事实一致性校验与不确定性拒答机制，建立「可核查」的回答生成流程，让每一条回复都能回指知识库原文片段。</p>
+          <div class="tags"><span>引用溯源</span><span>一致性校验</span><span>可信评测</span></div>
+        </article>
+
+        <article class="card" style="--glow: rgba(124,58,237,0.2)">
+          <div class="no">DIRECTION 04</div>
+          <h3>低资源意图识别与增量学习</h3>
+          <p>面向新业务冷启动场景，研究小样本 / 零样本意图迁移与持续增量学习，在避免灾难性遗忘的前提下快速适配新业务话术体系。</p>
+          <div class="tags"><span>小样本学习</span><span>增量训练</span><span>冷启动</span></div>
+        </article>
+      </div>
+
+      <div class="metrics">
+        <b>评测指标</b>
+        <span>意图识别准确率</span>
+        <span>首轮解决率</span>
+        <span>平均响应时延</span>
+        <span>引用准确率</span>
+        <span>幻觉率</span>
+        <span>人工转接率</span>
+        <span>用户满意度 CSAT</span>
+      </div>
+    </section>
+
+    <footer>
+      <span>高梓括 · 计算机 24010 · 24001011019</span>
+      <span>《高级网页设计》18-3 · SVG 矢量架构图</span>
+    </footer>
+  </div>
+</body>
+</html>
