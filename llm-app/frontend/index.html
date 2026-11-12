@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LLM 应用设计实验 · 知识库问答系统</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<main class="portal">
+  <div class="portal-header">
+    <div class="logo">⌘</div>
+    <div>
+      <h1>LLM 应用设计实验 · 知识库问答系统</h1>
+      <div class="sub">高梓括 · 前端原生 HTML/CSS/JS（无第三方框架） + 后端 Express 中间层 · 本地文件解析建库（RAG）+ 大模型流式问答</div>
+    </div>
+  </div>
+
+  <div class="health" id="health">
+    <span class="dot"></span><span id="healthText">正在检测服务状态…</span>
+  </div>
+
+  <div class="cards">
+    <a class="pcard" href="chat.html">
+      <div class="pic">💬</div>
+      <h3>智能问答</h3>
+      <p>基于本地知识库的流式问答。支持会话管理（新建 / 重命名 / 删除 / 历史加载）、知识库检索开关、引用来源溯源，每个请求与响应的报文都会打印到浏览器控制台。</p>
+      <span class="tag">/api/ai/chat · SSE</span>
+    </a>
+
+    <a class="pcard" href="kb.html">
+      <div class="pic">📚</div>
+      <h3>知识库管理</h3>
+      <p>上传 TXT / MD / PDF / DOC / DOCX / PPT / PPTX，服务端自动解析、语义切分、入库建索引。支持上传进度、解析状态、分块预览、删除与检索测试。</p>
+      <span class="tag">/api/kb · 文件解析</span>
+    </a>
+
+    <a class="pcard" href="../index.html">
+      <div class="pic">🏠</div>
+      <h3>返回课程作品集</h3>
+      <p>回到 18-1 ～ 18-9 等课程网页作品总入口（第 18 章：基于知识库的智能客服系统）。</p>
+      <span class="tag">index.html</span>
+    </a>
+  </div>
+
+  <div class="arch">
+    <h3>系统架构</h3>
+    <div class="arch-row">
+      <span class="arch-node">浏览器（原生前端）</span>
+      <span class="arch-arrow">→</span>
+      <span class="arch-node">Express 中间层</span>
+      <span class="arch-arrow">→</span>
+      <span class="arch-node">文件解析 / 分块 / BM25 检索</span>
+      <span class="arch-arrow">→</span>
+      <span class="arch-node">OpenAI 兼容大模型 API</span>
+    </div>
+    <div class="arch-row" style="margin-top:10px">
+      <span class="arch-node">会话 / 消息（MySQL 或本地 JSON）</span>
+      <span class="arch-arrow">→</span>
+      <span class="arch-node">知识库文档 / 分块（同库）</span>
+      <span class="arch-arrow">→</span>
+      <span class="arch-node">控制台报文日志</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    实验说明：所有接口前缀为 <code>/api</code>，统一响应格式 <code>{ code, msg, data }</code>；<br />
+    大模型接入在 <code>backend/.env</code> 中配置（API Key 不写入前端代码）；数据库可用 MySQL 8.0，未配置时自动退化为本地 JSON。
+  </div>
+</main>
+
+<script>
+  fetch('api/health').then(function (r) { return r.json(); }).then(function (d) {
+    var box = document.getElementById('health');
+    if (d && d.code === 0) {
+      box.className = 'health up';
+      document.getElementById('healthText').textContent =
+        '服务正常 · 模型 ' + d.data.llmModel + ' · 存储 ' + d.data.storage + ' · 索引分块 ' + d.data.rag.chunks;
+    } else {
+      box.className = 'health down';
+      document.getElementById('healthText').textContent = '服务未连接（请先启动 backend）';
+    }
+  }).catch(function () {
+    var box = document.getElementById('health');
+    box.className = 'health down';
+    document.getElementById('healthText').textContent = '服务未连接（请先启动 backend）';
+  });
+</script>
+</body>
+</html>

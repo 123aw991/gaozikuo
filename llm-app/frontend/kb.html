@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>知识库管理 · 知识库问答系统</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-head">
+      <div class="logo">📚</div>
+      <h2>知识库管理</h2>
+      <a class="back" href="index.html">门户</a>
+    </div>
+    <div class="side-body">
+      <a class="btn primary" href="chat.html" style="display:block;text-align:center;text-decoration:none">前往智能问答 →</a>
+      <div class="tip">
+        上传文件后，服务端自动<b>解析 → 语义切分 → 入库建索引</b>，供问答页检索使用。<br />
+        支持 TXT / MD / PDF / DOC / DOCX / PPT / PPTX。
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="chat-head">
+      <span class="title">知识库管理（RAG）</span>
+      <span class="spacer"></span>
+      <span class="switch" style="color:#9fe8dd;font-family:Consolas,monospace" id="idxMeta">索引分块 0</span>
+    </header>
+
+    <div class="kb-layout">
+      <!-- 左：上传 + 文件列表 -->
+      <section class="panel">
+        <h3>📥 文件上传 <span class="badge" id="docCount">0 个文档</span></h3>
+        <div class="dropzone" id="dropzone">
+          <div class="icon">⬆</div>
+          <div class="t1">拖拽文件到此处，或点击选择</div>
+          <div class="t2">文件仅在本机服务端解析，不上传第三方<br />支持 TXT / MD / PDF / DOC / DOCX / PPT / PPTX</div>
+          <input type="file" id="fileInput" multiple hidden
+                 accept=".txt,.md,.markdown,.pdf,.doc,.docx,.ppt,.pptx,.csv,.json" />
+        </div>
+        <div class="progress" id="progress"><i></i></div>
+
+        <h3 style="margin-top:18px">📄 知识库文件</h3>
+        <div class="file-list" id="fileList"></div>
+      </section>
+
+      <!-- 右：统计 + 检索测试 -->
+      <section class="panel">
+        <h3>📊 知识库概览</h3>
+        <div class="stat-row">
+          <div class="stat"><b id="stDocs">0</b><span>文档数</span></div>
+          <div class="stat"><b id="stChunks">0</b><span>分块数</span></div>
+          <div class="stat"><b id="stChars">0</b><span>字符数</span></div>
+        </div>
+
+        <h3>🔎 检索测试（BM25）</h3>
+        <div class="search-box">
+          <input id="searchInput" placeholder="输入查询，如：退货条件" />
+          <button class="btn" id="searchBtn">检索</button>
+        </div>
+        <div class="search-result" id="searchResult">
+          <div class="empty">输入查询后可测试知识库检索效果（Top 结果按相关度排序）</div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span id="modalTitle">分块预览</span>
+      <span class="spacer"></span>
+      <button class="mini" id="modalClose">关闭</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/kb.js"></script>
+</body>
+</html>

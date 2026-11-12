@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>智能问答 · 知识库问答系统</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <!-- 侧栏：会话管理 -->
+  <aside class="sidebar">
+    <div class="side-head">
+      <div class="logo">💬</div>
+      <h2>智能问答</h2>
+      <a class="back" href="index.html">门户</a>
+    </div>
+    <div class="side-body">
+      <button class="btn primary" id="newBtn">+ 新建会话</button>
+      <div id="convList" class="file-list"></div>
+      <label class="switch" style="margin-top:6px">
+        <input type="checkbox" id="kbToggle" checked /> 启用知识库检索（RAG）
+      </label>
+      <div class="tip">
+        请求 / 响应数据均在浏览器 <b>Console</b>（F12）中打印：每次对话会输出请求的 messages、流式事件、模型回复与 Token 用量。
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主区：对话 -->
+  <main class="main">
+    <header class="chat-head">
+      <span class="title" id="chatTitle">知识库问答</span>
+      <span class="spacer"></span>
+      <span class="switch" style="color:#9fe8dd"><span class="dot" id="ragDot" style="width:8px;height:8px;border-radius:50%;background:#34d399"></span> RAG 已开启</span>
+      <span class="switch" style="color:#7189ad;font-family:Consolas,monospace" id="usageMeta">tokens: 0</span>
+    </header>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="composer">
+      <div class="quick" id="quick">
+        <button>七天无理由退货有什么条件？</button>
+        <button>系统支持上传哪些文件格式？</button>
+        <button>人工客服的服务时间？</button>
+        <button>私有化部署最低配置？</button>
+      </div>
+      <textarea id="input" placeholder="基于知识库提问，Enter 发送，Shift + Enter 换行"></textarea>
+      <div class="composer-bar">
+        <span class="hint" id="statusHint">就绪 · 请求/响应会打印到控制台</span>
+        <span class="grow"></span>
+        <button class="btn-stop" id="stopBtn" hidden>停止</button>
+        <button class="btn-send" id="sendBtn">发送</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/md.js"></script>
+<script src="js/chat.js"></script>
+</body>
+</html>
