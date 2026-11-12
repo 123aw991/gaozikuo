@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>18-9 高梓括 · 基于知识库的智能问答系统（RAG）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #070b14;
+    --panel: rgba(16, 26, 45, 0.92);
+    --line: rgba(120, 150, 200, 0.18);
+    --text: #e6edfa;
+    --muted: #8ea3c4;
+    --sky: #38bdf8;
+    --mint: #7ee0d0;
+    --violet: #b57bff;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    color: var(--text);
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    background:
+      radial-gradient(1100px 640px at 8% -10%, rgba(56, 189, 248, 0.13), transparent 62%),
+      radial-gradient(900px 600px at 96% 2%, rgba(126, 224, 208, 0.11), transparent 62%),
+      var(--bg);
+    overflow: hidden;
+  }
+
+  .app { display: grid; grid-template-columns: 372px 1fr; height: 100vh; }
+
+  /* ---------------- 侧栏 ---------------- */
+  .sidebar {
+    border-right: 1px solid var(--line);
+    background: rgba(11, 19, 34, 0.94);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand .logo {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--mint), var(--sky));
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+    color: #04121f;
+    box-shadow: 0 8px 22px rgba(56, 189, 248, 0.3);
+  }
+
+  .brand h1 { font-size: 15.5px; letter-spacing: 1px; }
+  .brand p { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 0.5px; }
+
+  .side-body { flex: 1; overflow-y: auto; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+  .side-body::-webkit-scrollbar, .messages::-webkit-scrollbar { width: 8px; }
+  .side-body::-webkit-scrollbar-thumb, .messages::-webkit-scrollbar-thumb {
+    background: rgba(120, 150, 200, 0.25); border-radius: 4px;
+  }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: rgba(20, 34, 58, 0.5);
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .stat b { display: block; font-family: Consolas, monospace; font-size: 18px; color: var(--mint); }
+  .stat span { font-size: 11px; color: var(--muted); }
+
+  .dropzone {
+    border: 1.5px dashed rgba(120, 160, 220, 0.4);
+    border-radius: 14px;
+    padding: 18px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(20, 34, 58, 0.32);
+  }
+
+  .dropzone:hover, .dropzone.drag {
+    border-color: rgba(56, 189, 248, 0.75);
+    background: rgba(56, 189, 248, 0.1);
+  }
+
+  .dropzone .icon { font-size: 24px; margin-bottom: 6px; }
+  .dropzone .t1 { font-size: 13px; color: #cfe0f8; }
+  .dropzone .t2 { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.7; }
+
+  .toolbar { display: flex; gap: 8px; }
+
+  .btn {
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: rgba(30, 52, 88, 0.5);
+    color: #cfe0f8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+  }
+
+  .btn:hover { border-color: rgba(56, 189, 248, 0.55); color: #fff; background: rgba(56, 189, 248, 0.14); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.danger:hover { border-color: rgba(244, 114, 182, 0.6); color: #ffc7e5; background: rgba(244, 114, 182, 0.12); }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    letter-spacing: 1.4px;
+    color: #93aacd;
+    font-weight: 700;
+  }
+
+  .file-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .file-item {
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: rgba(20, 34, 58, 0.55);
+    padding: 10px 11px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .file-item .fext {
+    width: 34px; height: 34px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-family: Consolas, monospace;
+    font-weight: 700;
+    color: #04121f;
+    background: linear-gradient(135deg, #7ee0d0, #38bdf8);
+  }
+
+  .file-item .fmain { flex: 1; min-width: 0; }
+
+  .file-item .fname {
+    font-size: 12.5px;
+    color: #dbe8fb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .file-item .fmeta { font-size: 11px; color: #7d94b8; margin-top: 4px; font-family: Consolas, monospace; }
+
+  .file-item .fops { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .mini {
+    font-size: 11px;
+    padding: 4px 7px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: #8ea3c4;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .mini:hover { color: #9fd8ff; border-color: rgba(56, 189, 248, 0.5); }
+  .mini.del:hover { color: #ffc7e5; border-color: rgba(244, 114, 182, 0.55); }
+
+  .empty {
+    text-align: center;
+    padding: 22px 10px;
+    font-size: 12px;
+    color: #6d84ab;
+    border: 1px dashed var(--line);
+    border-radius: 11px;
+    line-height: 1.9;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 11.5px; color: var(--muted); }
+
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--text);
+    background: rgba(8, 15, 28, 0.9);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .field textarea { min-height: 74px; resize: vertical; line-height: 1.6; }
+
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+  }
+
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .switch input { width: 15px; height: 15px; accent-color: #38bdf8; }
+
+  .tip {
+    font-size: 11px;
+    line-height: 1.75;
+    color: #7d94b8;
+    border-left: 2px solid rgba(126, 224, 208, 0.5);
+    padding-left: 9px;
+  }
+
+  .tip b { color: #9fe8dd; font-weight: 600; }
+
+  /* ---------------- 聊天区 ---------------- */
+  .chat { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+
+  .chat-head {
+    height: 60px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(10, 18, 32, 0.72);
+  }
+
+  .chat-head .title { font-size: 14px; letter-spacing: 1px; }
+
+  .badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: #9fe8dd;
+    border: 1px solid rgba(126, 224, 208, 0.35);
+    background: rgba(126, 224, 208, 0.1);
+    font-family: Consolas, monospace;
+  }
+
+  .chat-head .spacer { flex: 1; }
+  .chat-head .meta { font-size: 11.5px; color: var(--muted); font-family: Consolas, monospace; }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .msg { display: flex; gap: 11px; max-width: 940px; width: 100%; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .msg .avatar {
+    width: 32px; height: 32px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .msg.user .avatar { background: rgba(181, 123, 255, 0.16); border-color: rgba(181, 123, 255, 0.34); }
+
+  .bubble-wrap { min-width: 0; max-width: calc(100% - 46px); display: flex; flex-direction: column; gap: 8px; }
+  .msg.user .bubble-wrap { align-items: flex-end; }
+
+  .bubble {
+    padding: 12px 15px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.85;
+    background: rgba(20, 34, 58, 0.85);
+    border: 1px solid var(--line);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .msg.user .bubble {
+    background: linear-gradient(135deg, rgba(56, 120, 220, 0.55), rgba(130, 90, 220, 0.5));
+    border-color: rgba(120, 160, 240, 0.35);
+  }
+
+  .bubble p { margin: 0 0 8px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble h3, .bubble h4 { margin: 10px 0 6px; font-size: 14px; color: #cfe6ff; }
+  .bubble ul, .bubble ol { margin: 6px 0 8px; padding-left: 22px; }
+  .bubble li { margin: 3px 0; }
+  .bubble strong { color: #9fe8dd; }
+  .bubble blockquote { border-left: 3px solid rgba(56, 189, 248, 0.5); padding-left: 12px; color: #a9c2e6; margin: 8px 0; }
+  .bubble code.inline { font-family: Consolas, monospace; font-size: 12.5px; padding: 2px 6px; border-radius: 5px; background: rgba(56, 189, 248, 0.14); color: #9fd8ff; }
+
+  .code-block { margin: 9px 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #060c17; }
+  .code-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 12px; font-size: 11px; color: #8ea3c4;
+    background: rgba(30, 52, 88, 0.55); font-family: Consolas, monospace;
+  }
+  .code-head button {
+    font-size: 11px; color: #9fd8ff; background: transparent;
+    border: 1px solid rgba(56, 189, 248, 0.32); border-radius: 6px; padding: 2px 8px; cursor: pointer;
+  }
+  .code-block pre { margin: 0; padding: 11px 13px; overflow-x: auto; font-family: Consolas, monospace; font-size: 12.5px; line-height: 1.7; color: #cfe0f8; }
+
+  .cites { display: flex; flex-direction: column; gap: 7px; }
+
+  .cite-head { font-size: 11.5px; color: #7d94b8; letter-spacing: 0.5px; }
+
+  .cite {
+    border: 1px solid rgba(126, 224, 208, 0.28);
+    border-radius: 10px;
+    background: rgba(126, 224, 208, 0.06);
+    font-size: 12px;
+    overflow: hidden;
+  }
+
+  .cite summary {
+    cursor: pointer;
+    padding: 8px 11px;
+    color: #b6e7de;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+  }
+
+  .cite summary::-webkit-details-marker { display: none; }
+
+  .cite .no {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: rgba(126, 224, 208, 0.18);
+    color: #9fe8dd;
+  }
+
+  .cite .score { margin-left: auto; font-family: Consolas, monospace; font-size: 11px; color: #7d94b8; }
+
+  .cite .body {
+    padding: 0 11px 10px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #a9c2e6;
+    white-space: pre-wrap;
+    border-top: 1px dashed rgba(126, 224, 208, 0.2);
+    padding-top: 8px;
+  }
+
+  .msg-foot { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #7189ad; font-family: Consolas, monospace; }
+  .msg-foot button { background: transparent; border: none; color: #7189ad; font-size: 11px; cursor: pointer; font-family: inherit; }
+  .msg-foot button:hover { color: #9fd8ff; }
+
+  .typing { display: inline-flex; gap: 4px; padding: 3px 0; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: #38bdf8; animation: blink 1.1s infinite ease-in-out; }
+  .typing i:nth-child(2) { animation-delay: 0.18s; }
+  .typing i:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes blink { 0%,80%,100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+  .error-bubble { border-color: rgba(244, 114, 182, 0.45) !important; background: rgba(244, 114, 182, 0.1) !important; color: #ffc7e5; }
+
+  .composer {
+    flex-shrink: 0;
+    margin: 8px 24px 18px;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background: rgba(16, 26, 45, 0.94);
+    padding: 10px 12px 9px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .composer:focus-within { border-color: rgba(56, 189, 248, 0.5); }
+
+  .composer textarea {
+    width: 100%;
+    min-height: 44px;
+    max-height: 150px;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.75;
+    font-family: inherit;
+    padding: 3px 4px 0;
+  }
+
+  .composer textarea::placeholder { color: #62789b; }
+
+  .composer-bar { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+  .composer-bar .hint { font-size: 11px; color: #62789b; }
+  .composer-bar .grow { flex: 1; }
+
+  .btn-send {
+    padding: 9px 22px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-family: inherit;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #04101f;
+    background: linear-gradient(135deg, #7ee0d0, #38bdf8);
+    box-shadow: 0 8px 22px rgba(56, 189, 248, 0.3);
+  }
+
+  .btn-send:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+  .btn-stop {
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    color: #ffc7e5;
+    background: rgba(244, 114, 182, 0.16);
+    border: 1px solid rgba(244, 114, 182, 0.45);
+  }
+
+  .quick { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 9px; }
+
+  .quick button {
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(30, 52, 88, 0.4);
+    color: #a9c2e6;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .quick button:hover { border-color: rgba(126, 224, 208, 0.5); color: #fff; background: rgba(126, 224, 208, 0.12); }
+
+  /* ---------------- 弹层 ---------------- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 38px;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(10, 20, 36, 0.96);
+    border: 1px solid rgba(126, 224, 208, 0.42);
+    color: #d9f5ef;
+    font-size: 12.5px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 40;
+    max-width: 70vw;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { border-color: rgba(244, 114, 182, 0.5); color: #ffd7ea; }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 14, 0.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 40px;
+  }
+
+  .modal.show { display: flex; }
+
+  .modal-card {
+    width: min(900px, 100%);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    background: #0b1526;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13.5px;
+  }
+
+  .modal-head .spacer { flex: 1; }
+
+  .modal-body { overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  .chunk {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 9px 11px;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #b9cdec;
+    background: rgba(20, 34, 58, 0.5);
+    white-space: pre-wrap;
+  }
+
+  .chunk b { color: #7ee0d0; font-family: Consolas, monospace; font-size: 11px; margin-right: 6px; }
+
+  @media (max-width: 1024px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .messages { padding: 16px 14px 8px; }
+    .composer { margin: 6px 14px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ==================== 侧栏：知识库管理 ==================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">⌘</div>
+      <div>
+        <h1>知识库智能问答</h1>
+        <p>RAG · 本地文件解析 · 引用溯源</p>
+      </div>
+    </div>
+
+    <div class="side-body">
+      <div class="stats">
+        <div class="stat"><b id="statDocs">0</b><span>文档</span></div>
+        <div class="stat"><b id="statChunks">0</b><span>分块</span></div>
+        <div class="stat"><b id="statChars">0</b><span>字数</span></div>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <div class="icon">⬆</div>
+        <div class="t1">拖拽文件到此处，或点击选择</div>
+        <div class="t2">支持 TXT / MD / PDF / DOC / DOCX / PPT / PPTX<br />文件仅在本机浏览器解析，不上传到服务器</div>
+        <input type="file" id="fileInput" multiple hidden
+               accept=".txt,.md,.markdown,.pdf,.doc,.docx,.ppt,.pptx,.csv,.json" />
+      </div>
+
+      <div class="toolbar">
+        <button type="button" class="btn" id="loadSampleBtn">加载内置知识库（2 个）</button>
+      </div>
+
+      <div class="section-title">
+        <span>知识库文件</span>
+        <span id="kbCount" style="font-family:Consolas,monospace">0</span>
+      </div>
+
+      <div class="file-list" id="fileList"></div>
+
+      <div class="toolbar">
+        <button type="button" class="btn danger" id="clearKbBtn">清空知识库</button>
+      </div>
+
+      <div class="section-title"><span>检索与模型设置</span></div>
+
+      <div class="field">
+        <label for="baseURL">BaseURL</label>
+        <input id="baseURL" type="text" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="model">Model ID</label>
+        <input id="model" type="text" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="apiKey">API Key</label>
+        <input id="apiKey" type="password" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="topK">召回条数 Top-K</label>
+        <select id="topK">
+          <option value="2">2 条（回答更聚焦）</option>
+          <option value="4" selected>4 条（推荐）</option>
+          <option value="6">6 条（上下文更全）</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="systemPrompt">系统提示词（可改）</label>
+        <textarea id="systemPrompt" spellcheck="false"></textarea>
+      </div>
+
+      <label class="switch"><input type="checkbox" id="streamToggle" checked /> 流式输出</label>
+
+      <div class="tip">
+        打开开发者工具 <b>F12 → Console</b>，可查看<b>检索命中的分块</b>、<b>发送给大模型</b>的完整请求（URL / Headers / messages 含拼接后的参考资料）以及<b>从大模型接收</b>的原始响应与 Token 用量。
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== 主区：问答 ==================== -->
+  <main class="chat">
+    <header class="chat-head">
+      <span class="title">知识库问答</span>
+      <span class="badge" id="kbBadge">知识库为空</span>
+      <span class="spacer"></span>
+      <span class="meta" id="usageMeta">tokens: 0</span>
+    </header>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="composer">
+      <div class="quick" id="quick">
+        <button type="button">七天无理由退货有什么条件？</button>
+        <button type="button">系统支持上传哪些文件格式？</button>
+        <button type="button">私有化部署最低配置是多少？</button>
+        <button type="button">人工客服服务时间是几点到几点？</button>
+      </div>
+      <textarea id="input" placeholder="基于知识库提问，Enter 发送，Shift + Enter 换行"></textarea>
+      <div class="composer-bar">
+        <span class="hint" id="statusHint">就绪 · 请求/响应数据会打印到控制台</span>
+        <span class="grow"></span>
+        <button type="button" class="btn-stop" id="stopBtn" hidden>停止</button>
+        <button type="button" class="btn-send" id="sendBtn">发送</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span id="modalTitle">分块预览</span>
+      <span class="spacer"></span>
+      <button type="button" class="mini" id="modalClose">关闭</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="cdn/pdf.min.js"></script>
+<script src="cdn/mammoth.browser.min.js"></script>
+<script src="cdn/jszip.min.js"></script>
+<script src="kb/kb-samples.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* =====================================================================
+     1. 配置
+     ===================================================================== */
+  var PRESET = {
+    baseURL: "https://api.qnaigc.com/v1",
+    model: "qiniu/conatus-free",
+    apiKey: "sk-21ae365ee2c9867b53c4b0630929a44a418f42b2dce3df99d17808e509e53884"
+  };
+
+  var DEFAULT_SYSTEM =
+    "你是企业知识库问答助手。请严格依据【参考资料】回答用户问题：\n" +
+    "1. 只使用参考资料中的信息，资料中没有的内容要明确说明“知识库中未提及”，不要编造；\n" +
+    "2. 引用资料时在句末标注来源编号，例如 [1][2]；\n" +
+    "3. 回答使用简体中文，条理清晰，必要时分点列出；\n" +
+    "4. 若资料之间冲突，以编号靠前、表述更具体的资料为准。";
+
+  var CFG_KEY = "rag-chat-config-v1";
+  var KB_KEY = "rag-kb-files-v1";
+
+  var el = {
+    baseURL: document.getElementById("baseURL"),
+    model: document.getElementById("model"),
+    apiKey: document.getElementById("apiKey"),
+    topK: document.getElementById("topK"),
+    systemPrompt: document.getElementById("systemPrompt"),
+    stream: document.getElementById("streamToggle"),
+    dropzone: document.getElementById("dropzone"),
+    fileInput: document.getElementById("fileInput"),
+    fileList: document.getElementById("fileList"),
+    kbCount: document.getElementById("kbCount"),
+    statDocs: document.getElementById("statDocs"),
+    statChunks: document.getElementById("statChunks"),
+    statChars: document.getElementById("statChars"),
+    kbBadge: document.getElementById("kbBadge"),
+    loadSampleBtn: document.getElementById("loadSampleBtn"),
+    clearKbBtn: document.getElementById("clearKbBtn"),
+    messages: document.getElementById("messages"),
+    input: document.getElementById("input"),
+    sendBtn: document.getElementById("sendBtn"),
+    stopBtn: document.getElementById("stopBtn"),
+    statusHint: document.getElementById("statusHint"),
+    usageMeta: document.getElementById("usageMeta"),
+    quick: document.getElementById("quick"),
+    toast: document.getElementById("toast"),
+    modal: document.getElementById("modal"),
+    modalTitle: document.getElementById("modalTitle"),
+    modalBody: document.getElementById("modalBody"),
+    modalClose: document.getElementById("modalClose")
+  };
+
+  function loadConfig() {
+    var cfg = null;
+    try { cfg = JSON.parse(localStorage.getItem(CFG_KEY) || "null"); } catch (e) { cfg = null; }
+    if (!cfg) cfg = {};
+    el.baseURL.value = cfg.baseURL || PRESET.baseURL;
+    el.model.value = cfg.model || PRESET.model;
+    el.apiKey.value = cfg.apiKey || PRESET.apiKey;
+    el.systemPrompt.value = cfg.system || DEFAULT_SYSTEM;
+    if (cfg.topK) el.topK.value = String(cfg.topK);
+  }
+
+  function readConfig() {
+    return {
+      baseURL: el.baseURL.value.trim().replace(/\/+$/, ""),
+      model: el.model.value.trim(),
+      apiKey: el.apiKey.value.trim(),
+      system: el.systemPrompt.value,
+      topK: parseInt(el.topK.value, 10) || 4
+    };
+  }
+
+  function saveConfig() {
+    try {
+      localStorage.setItem(CFG_KEY, JSON.stringify({
+        baseURL: readConfig().baseURL,
+        model: el.model.value.trim(),
+        apiKey: el.apiKey.value.trim(),
+        system: el.systemPrompt.value,
+        topK: el.topK.value
+      }));
+    } catch (e) { /* 忽略 */ }
+  }
+
+  ["change", "blur"].forEach(function (evt) {
+    [el.baseURL, el.model, el.apiKey, el.systemPrompt, el.topK].forEach(function (node) {
+      node.addEventListener(evt, saveConfig);
+    });
+  });
+
+  /* =====================================================================
+     2. 知识库存储（localStorage + 内存兜底）
+     ===================================================================== */
+  var kbFiles = [];
+
+  function kbLoad() {
+    var raw = null;
+    try { raw = localStorage.getItem(KB_KEY); } catch (e) { raw = null; }
+    if (!raw) { kbFiles = []; return; }
+    try {
+      var list = JSON.parse(raw);
+      kbFiles = Array.isArray(list) ? list : [];
+    } catch (e) { kbFiles = []; }
+  }
+
+  function kbSave() {
+    try {
+      localStorage.setItem(KB_KEY, JSON.stringify(kbFiles));
+      return true;
+    } catch (e) {
+      console.warn("知识库写入 localStorage 失败（可能超出配额），本次仅保存在内存中：", e);
+      toast("本地存储已满，知识库仅在当前页面有效", true);
+      return false;
+    }
+  }
+
+  /* =====================================================================
+     3. 文件解析（TXT / MD / PDF / DOCX / PPTX + DOC/PPT 兜底）
+     ===================================================================== */
+  function extOf(name) {
+    var i = name.lastIndexOf(".");
+    return i < 0 ? "" : name.slice(i + 1).toLowerCase();
+  }
+
+  function decodeXml(s) {
+    return s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, function (_, d) {
+        return String.fromCharCode(parseInt(d, 10));
+      });
+  }
+
+  function parsePDF(file) {
+    if (typeof pdfjsLib === "undefined") return Promise.reject(new Error("PDF 解析库未加载"));
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "cdn/pdf.worker.min.js";
+    return file.arrayBuffer().then(function (buf) {
+      return pdfjsLib.getDocument({ data: new Uint8Array(buf), useSystemFonts: true }).promise;
+    }).then(function (pdf) {
+      var pages = [];
+      var seq = Promise.resolve();
+      for (var p = 1; p <= pdf.numPages; p++) {
+        (function (pageNo) {
+          seq = seq.then(function () {
+            return pdf.getPage(pageNo).then(function (page) {
+              return page.getTextContent().then(function (tc) {
+                var line = tc.items.map(function (it) { return it.str; }).join("");
+                pages.push("【第 " + pageNo + " 页】" + line);
+              });
+            });
+          });
+        })(p);
+      }
+      return seq.then(function () { return pages.join("\n\n"); });
+    });
+  }
+
+  function parseDocx(file) {
+    if (typeof mammoth === "undefined") return Promise.reject(new Error("DOCX 解析库未加载"));
+    return file.arrayBuffer().then(function (buf) {
+      return mammoth.extractRawText({ arrayBuffer: buf });
+    }).then(function (res) { return res.value || ""; });
+  }
+
+  function parsePptx(file) {
+    if (typeof JSZip === "undefined") return Promise.reject(new Error("PPTX 解析库未加载"));
+    return file.arrayBuffer().then(function (buf) {
+      return JSZip.loadAsync(buf);
+    }).then(function (zip) {
+      var names = Object.keys(zip.files).filter(function (n) {
+        return /^ppt\/slides\/slide\d+\.xml$/.test(n);
+      }).sort(function (a, b) {
+        return parseInt(a.match(/(\d+)/)[1], 10) - parseInt(b.match(/(\d+)/)[1], 10);
+      });
+
+      if (!names.length) throw new Error("未找到幻灯片内容");
+
+      var out = [];
+      var seq = Promise.resolve();
+      names.forEach(function (n, i) {
+        seq = seq.then(function () {
+          return zip.file(n).async("string").then(function (xml) {
+            var texts = (xml.match(/<a:t>[\s\S]*?<\/a:t>/g) || []).map(function (t) {
+              return decodeXml(t.replace(/<\/?a:t>/g, ""));
+            });
+            out.push("【第 " + (i + 1) + " 页】\n" + texts.join("\n"));
+          });
+        });
+      });
+      return seq.then(function () { return out.join("\n\n"); });
+    });
+  }
+
+  function extractRuns(str) {
+    var m = str.match(/[\u4e00-\u9fa5A-Za-z0-9，。、；：？！（）《》“”‘’\-—,.()%\s]{6,}/g) || [];
+    return m.map(function (s) { return s.replace(/\s+/g, " ").trim(); }).filter(function (s) {
+      var cn = (s.match(/[\u4e00-\u9fa5]/g) || []).length;
+      return cn >= 2 || s.length >= 12;
+    });
+  }
+
+  function parseLegacy(file) {
+    return file.arrayBuffer().then(function (buf) {
+      var bytes = new Uint8Array(buf);
+      var s16 = "";
+      for (var i = 0; i + 1 < bytes.length; i += 2) {
+        s16 += String.fromCharCode(bytes[i] | (bytes[i + 1] << 8));
+      }
+      var s8 = "";
+      for (var j = 0; j < bytes.length; j++) s8 += String.fromCharCode(bytes[j]);
+
+      var seen = {};
+      var runs = [];
+      extractRuns(s16).concat(extractRuns(s8)).forEach(function (r) {
+        if (!seen[r]) { seen[r] = 1; runs.push(r); }
+      });
+
+      var text = runs.join("\n").trim();
+      if (text.replace(/\s/g, "").length < 40) {
+        throw new Error("旧版 .doc/.ppt 为二进制格式，未能提取有效文本，请另存为 .docx / .pptx 后再上传");
+      }
+      return text;
+    });
+  }
+
+  function parseFile(file) {
+    var e = extOf(file.name);
+
+    if (/^(txt|md|markdown|csv|json|log|html|htm|xml)$/.test(e) || !e) return file.text();
+    if (e === "pdf") return parsePDF(file);
+    if (e === "docx") return parseDocx(file);
+    if (e === "pptx") return parsePptx(file);
+    if (e === "doc" || e === "ppt") return parseLegacy(file);
+
+    return file.text().catch(function () {
+      return parseLegacy(file);
+    });
+  }
+
+  /* =====================================================================
+     4. 语义分块
+     ===================================================================== */
+  function chunkText(text, size, overlap) {
+    size = size || 420;
+    overlap = overlap || 80;
+
+    var clean = String(text)
+      .replace(/\r/g, "")
+      .replace(/[\t\u00a0]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/[ ]{2,}/g, " ")
+      .trim();
+
+    var chunks = [];
+    var i = 0;
+    var guard = 0;
+
+    while (i < clean.length && guard++ < 2000) {
+      var end = Math.min(clean.length, i + size);
+
+      if (end < clean.length) {
+        var seg = clean.slice(i, end);
+        var cut = Math.max(
+          seg.lastIndexOf("。"), seg.lastIndexOf("\n"), seg.lastIndexOf("；"),
+          seg.lastIndexOf("！"), seg.lastIndexOf("？"), seg.lastIndexOf(". ")
+        );
+        if (cut > size * 0.45) end = i + cut + 1;
+      }
+
+      var piece = clean.slice(i, end).trim();
+      if (piece) chunks.push(piece);
+      if (end >= clean.length) break;
+
+      var next = end - overlap;
+      i = next > i ? next : end;
+    }
+
+    return chunks;
+  }
+
+  /* =====================================================================
+     5. 检索索引（BM25）
+     ===================================================================== */
+  var idx = { chunks: [], df: {}, avgdl: 0 };
+
+  function tokenize(text) {
+    var s = String(text).toLowerCase();
+    var tokens = s.match(/[a-z0-9_]+/g) || [];
+    var cjk = s.match(/[\u4e00-\u9fa5]+/g) || [];
+
+    cjk.forEach(function (seg) {
+      if (seg.length === 1) { tokens.push(seg); return; }
+      for (var i = 0; i < seg.length - 1; i++) tokens.push(seg.slice(i, i + 2));
+    });
+
+    return tokens;
+  }
+
+  function buildIndex() {
+    idx = { chunks: [], df: {}, avgdl: 0 };
+    var totalLen = 0;
+
+    kbFiles.forEach(function (f) {
+      (f.chunks || []).forEach(function (text, i) {
+        var toks = tokenize(text);
+        var tf = {};
+        toks.forEach(function (t) { tf[t] = (tf[t] || 0) + 1; });
+        Object.keys(tf).forEach(function (t) { idx.df[t] = (idx.df[t] || 0) + 1; });
+        totalLen += toks.length;
+        idx.chunks.push({ fileId: f.id, fileName: f.name, idx: i, text: text, tf: tf, len: toks.length });
+      });
+    });
+
+    idx.avgdl = idx.chunks.length ? totalLen / idx.chunks.length : 0;
+  }
+
+  function retrieve(query, k) {
+    var N = idx.chunks.length;
+    if (!N) return [];
+
+    var qToks = Object.keys(tokenize(query).reduce(function (o, t) { o[t] = 1; return o; }, {}));
+    var k1 = 1.5, b = 0.75;
+    var scored = [];
+
+    idx.chunks.forEach(function (c) {
+      var score = 0;
+      qToks.forEach(function (t) {
+        var f = c.tf[t];
+        if (!f) return;
+        var df = idx.df[t] || 0;
+        var idf = Math.log(1 + (N - df + 0.5) / (df + 0.5));
+        score += idf * (f * (k1 + 1)) / (f + k1 * (1 - b + b * c.len / (idx.avgdl || 1)));
+      });
+      if (score > 0) scored.push({ chunk: c, score: score });
+    });
+
+    scored.sort(function (a, b2) { return b2.score - a.score; });
+
+    var top = scored.slice(0, Math.max(k * 2, k));
+    var max = top.length ? top[0].score : 1;
+    var out = [];
+    var used = {};
+
+    for (var i = 0; i < top.length && out.length < k; i++) {
+      var key = top[i].chunk.fileId + "#" + top[i].chunk.idx;
+      if (used[key]) continue;
+      used[key] = 1;
+      out.push({ chunk: top[i].chunk, score: top[i].score, rel: top[i].score / max });
+    }
+
+    return out;
+  }
+
+  /* =====================================================================
+     6. 知识库 UI
+     ===================================================================== */
+  function formatSize(n) {
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1024 / 1024).toFixed(2) + " MB";
+  }
+
+  function renderKB() {
+    var totalChunks = 0;
+    var totalChars = 0;
+    kbFiles.forEach(function (f) {
+      totalChunks += (f.chunks || []).length;
+      totalChars += f.chars || 0;
+    });
+
+    el.statDocs.textContent = kbFiles.length;
+    el.statChunks.textContent = totalChunks;
+    el.statChars.textContent = totalChars > 9999 ? (totalChars / 1000).toFixed(1) + "k" : totalChars;
+    el.kbCount.textContent = kbFiles.length;
+    el.kbBadge.textContent = totalChunks
+      ? "知识库：" + kbFiles.length + " 文件 / " + totalChunks + " 分块"
+      : "知识库为空";
+
+    el.fileList.innerHTML = "";
+
+    if (!kbFiles.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.innerHTML = "暂无知识库文件<br />点击上方按钮加载内置文档，或拖入 PDF / DOCX / PPTX";
+      el.fileList.appendChild(empty);
+      return;
+    }
+
+    kbFiles.forEach(function (f) {
+      var item = document.createElement("div");
+      item.className = "file-item";
+
+      var ext = document.createElement("div");
+      ext.className = "fext";
+      ext.textContent = (f.ext || "doc").toUpperCase().slice(0, 4);
+
+      var main = document.createElement("div");
+      main.className = "fmain";
+      main.innerHTML = "<div class='fname' title='" + f.name.replace(/'/g, "") + "'>" + f.name + "</div>" +
+        "<div class='fmeta'>" + (f.chunks || []).length + " 段 · " + formatSize(f.size || 0) + " · " + (f.chars || 0) + " 字</div>";
+
+      var ops = document.createElement("div");
+      ops.className = "fops";
+
+      var viewBtn = document.createElement("button");
+      viewBtn.type = "button";
+      viewBtn.className = "mini";
+      viewBtn.textContent = "分块";
+      viewBtn.addEventListener("click", function () { openChunks(f); });
+
+      var delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "mini del";
+      delBtn.textContent = "删除";
+      delBtn.addEventListener("click", function () { removeFile(f.id); });
+
+      ops.appendChild(viewBtn);
+      ops.appendChild(delBtn);
+
+      item.appendChild(ext);
+      item.appendChild(main);
+      item.appendChild(ops);
+      el.fileList.appendChild(item);
+    });
+  }
+
+  function openChunks(f) {
+    el.modalTitle.textContent = f.name + " · " + f.chunks.length + " 个分块";
+    el.modalBody.innerHTML = "";
+    f.chunks.forEach(function (text, i) {
+      var d = document.createElement("div");
+      d.className = "chunk";
+      d.innerHTML = "<b>#" + (i + 1) + "</b>" + text.replace(/</g, "&lt;");
+      el.modalBody.appendChild(d);
+    });
+    el.modal.classList.add("show");
+  }
+
+  el.modalClose.addEventListener("click", function () { el.modal.classList.remove("show"); });
+  el.modal.addEventListener("click", function (e) { if (e.target === el.modal) el.modal.classList.remove("show"); });
+
+  function removeFile(id) {
+    kbFiles = kbFiles.filter(function (f) { return f.id !== id; });
+    kbSave();
+    buildIndex();
+    renderKB();
+    toast("已从知识库移除该文件");
+  }
+
+  function toast(msg, isErr) {
+    el.toast.textContent = msg;
+    el.toast.className = "toast show" + (isErr ? " err" : "");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.toast.className = "toast"; }, 2600);
+  }
+
+  var parsing = 0;
+
+  function ingestFile(file) {
+    var rec = {
+      id: "f" + Date.now() + Math.random().toString(36).slice(2, 7),
+      name: file.name,
+      ext: extOf(file.name) || "txt",
+      size: file.size,
+      addedAt: Date.now(),
+      chunks: [],
+      chars: 0
+    };
+
+    setStatus("正在解析：" + file.name);
+    parsing++;
+
+    return Promise.resolve()
+      .then(function () { return parseFile(file); })
+      .then(function (text) {
+        if (!text || !text.trim()) throw new Error("未解析到文本内容（可能是扫描版文件或纯图片）");
+        var chunks = chunkText(text);
+        if (!chunks.length) throw new Error("分块结果为空");
+        rec.chunks = chunks;
+        rec.chars = text.replace(/\s/g, "").length;
+        kbFiles.push(rec);
+        kbSave();
+        buildIndex();
+        renderKB();
+        toast("已加入知识库：" + file.name + "（" + chunks.length + " 段）");
+      })
+      .catch(function (err) {
+        console.error("解析失败：" + file.name, err);
+        toast("解析失败：" + file.name + " —— " + err.message, true);
+      })
+      .then(function () {
+        parsing--;
+        if (!parsing) setStatus("就绪 · 请求/响应数据会打印到控制台");
+      });
+  }
+
+  function ingestFiles(list) {
+    var files = Array.prototype.slice.call(list || []);
+    var seq = Promise.resolve();
+    files.forEach(function (f) { seq = seq.then(function () { return ingestFile(f); }); });
+    return seq;
+  }
+
+  el.dropzone.addEventListener("click", function () { el.fileInput.click(); });
+  el.fileInput.addEventListener("change", function (e) {
+    ingestFiles(e.target.files);
+    el.fileInput.value = "";
+  });
+
+  ["dragenter", "dragover"].forEach(function (evt) {
+    el.dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      el.dropzone.classList.add("drag");
+    });
+  });
+
+  ["dragleave", "drop"].forEach(function (evt) {
+    el.dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      el.dropzone.classList.remove("drag");
+    });
+  });
+
+  el.dropzone.addEventListener("drop", function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) ingestFiles(e.dataTransfer.files);
+  });
+
+  function loadSamples(silent) {
+    var docs = window.KB_SAMPLES || [];
+    if (!docs.length) { toast("未找到内置知识库文件", true); return; }
+
+    var added = 0;
+    docs.forEach(function (d) {
+      var exists = kbFiles.some(function (f) { return f.name === d.name; });
+      if (exists) return;
+      var chunks = chunkText(d.content);
+      kbFiles.push({
+        id: "f" + Date.now() + Math.random().toString(36).slice(2, 7),
+        name: d.name,
+        ext: extOf(d.name) || "txt",
+        size: d.size || d.content.length,
+        addedAt: Date.now(),
+        chunks: chunks,
+        chars: d.content.replace(/\s/g, "").length
+      });
+      added++;
+    });
+
+    kbSave();
+    buildIndex();
+    renderKB();
+
+    if (added) {
+      if (!silent) toast("已载入 " + added + " 个内置知识库文件");
+      console.log("%c 知识库构建完成 ", "background:#0d9488;color:#fff;padding:2px 8px;border-radius:4px",
+        kbFiles.map(function (f) { return f.name + " (" + f.chunks.length + " 段)"; }));
+    } else if (!silent) {
+      toast("内置知识库文件已存在");
+    }
+  }
+
+  el.loadSampleBtn.addEventListener("click", function () { loadSamples(false); });
+
+  el.clearKbBtn.addEventListener("click", function () {
+    if (!kbFiles.length) { toast("知识库已经是空的"); return; }
+    if (!window.confirm("确定清空全部知识库文件吗？")) return;
+    kbFiles = [];
+    kbSave();
+    buildIndex();
+    renderKB();
+    toast("知识库已清空");
+  });
+
+  /* =====================================================================
+     7. Markdown 渲染
+     ===================================================================== */
+  var codeStore = {};
+  var codeSeq = 0;
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function inlineFormat(s) {
+    s = s.replace(/`([^`\n]+)`/g, function (_, c) { return "<code class='inline'>" + c + "</code>"; });
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+    return s;
+  }
+
+  function renderBlocks(text) {
+    var lines = text.split("\n");
+    var out = [];
+    var listType = null;
+    var para = [];
+
+    function closeList() { if (listType) { out.push("</" + listType + ">"); listType = null; } }
+    function flushPara() { if (para.length) { out.push("<p>" + para.join("<br/>") + "</p>"); para = []; } }
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = escapeHtml(lines[i]);
+      var t = line.trim();
+
+      if (/^#{3,}\s+/.test(t)) { flushPara(); closeList(); out.push("<h4>" + inlineFormat(t.replace(/^#{3,}\s+/, "")) + "</h4>"); continue; }
+      if (/^#{1,2}\s+/.test(t)) { flushPara(); closeList(); out.push("<h3>" + inlineFormat(t.replace(/^#{1,2}\s+/, "")) + "</h3>"); continue; }
+      if (/^>\s?/.test(t)) { flushPara(); closeList(); out.push("<blockquote>" + inlineFormat(t.replace(/^>\s?/, "")) + "</blockquote>"); continue; }
+      if (/^[-*]\s+/.test(t)) {
+        flushPara();
+        if (listType !== "ul") { closeList(); out.push("<ul>"); listType = "ul"; }
+        out.push("<li>" + inlineFormat(t.replace(/^[-*]\s+/, "")) + "</li>");
+        continue;
+      }
+      if (/^\d+\.\s+/.test(t)) {
+        flushPara();
+        if (listType !== "ol") { closeList(); out.push("<ol>"); listType = "ol"; }
+        out.push("<li>" + inlineFormat(t.replace(/^\d+\.\s+/, "")) + "</li>");
+        continue;
+      }
+      if (t === "") { flushPara(); closeList(); continue; }
+
+      closeList();
+      para.push(inlineFormat(t));
+    }
+
+    flushPara();
+    closeList();
+    return out.join("");
+  }
+
+  function renderMarkdown(src) {
+    var segs = String(src).split("```");
+    var html = "";
+
+    for (var i = 0; i < segs.length; i++) {
+      if (i % 2 === 1) {
+        var seg = segs[i];
+        var nl = seg.indexOf("\n");
+        var lang = nl > 0 ? seg.slice(0, nl).trim() : "";
+        var code = (nl > 0 ? seg.slice(nl + 1) : seg).replace(/\n$/, "");
+        var id = "c" + (++codeSeq);
+        codeStore[id] = code;
+        html += "<div class='code-block'><div class='code-head'><span>" + escapeHtml(lang || "text") +
+          "</span><button type='button' class='copy-btn' data-code='" + id + "'>复制</button></div>" +
+          "<pre><code>" + escapeHtml(code) + "</code></pre></div>";
+      } else {
+        html += renderBlocks(segs[i]);
+      }
+    }
+
+    return html;
+  }
+
+  /* =====================================================================
+     8. 控制台日志
+     ===================================================================== */
+  var CSS_REQ = "background:linear-gradient(90deg,#2563eb,#7c3aed);color:#fff;padding:2px 8px;border-radius:4px;font-weight:700";
+  var CSS_RES = "background:linear-gradient(90deg,#0d9488,#0ea5e9);color:#fff;padding:2px 8px;border-radius:4px;font-weight:700";
+  var CSS_KG = "background:#7c3aed;color:#fff;padding:2px 8px;border-radius:4px;font-weight:700";
+  var CSS_ERR = "background:#be123c;color:#fff;padding:2px 8px;border-radius:4px;font-weight:700";
+
+  function logRetrieval(query, hits, tokensUsed) {
+    console.log("%c ① 知识库检索（RAG Retrieve） ", CSS_KG);
+    console.log("用户问题：", query);
+    console.log("查询分词：", Object.keys(tokenize(query).reduce(function (o, t) { o[t] = 1; return o; }, {})));
+    console.log("知识库规模：", kbFiles.length + " 个文件 / " + idx.chunks.length + " 个分块");
+    console.table(hits.map(function (h) {
+      return {
+        来源文件: h.chunk.fileName,
+        分块序号: (h.chunk.idx + 1),
+        相关度: h.rel.toFixed(3),
+        BM25得分: h.score.toFixed(3),
+        内容摘要: h.chunk.text.slice(0, 40) + "…"
+      };
+    }));
+    console.log("命中分块详情：", hits.map(function (h) { return h.chunk; }));
+    console.log("拼接进 Prompt 的参考资料长度：", tokensUsed + " 字");
+  }
+
+  function logRequest(url, headers, body) {
+    console.log("%c ② → 发送给大模型的数据 ", CSS_REQ);
+    console.log("请求地址 URL：", url);
+    console.log("请求头 Headers：", headers);
+    console.log("请求体 Body（对象）：", body);
+    console.log("请求体 Body（JSON 字符串）：\n" + JSON.stringify(body, null, 2));
+    var last = body.messages[body.messages.length - 1];
+    console.log("本次实际发送的 user 内容（含参考资料）：\n" + last.content);
+  }
+
+  function logResponse(data) {
+    console.log("%c ③ ← 从大模型接收到的数据 ", CSS_RES);
+    console.log("原始响应 JSON：", data);
+    if (data && data.choices && data.choices[0] && data.choices[0].message) {
+      console.log("回复内容 content：", data.choices[0].message.content);
+    }
+    if (data && data.usage) console.log("Token 用量 usage：", data.usage);
+  }
+
+  /* =====================================================================
+     9. 问答
+     ===================================================================== */
+  var history = [];
+  var controller = null;
+
+  function setStatus(t) { el.statusHint.textContent = t; }
+
+  function createMessage(role, text) {
+    var wrap = document.createElement("div");
+    wrap.className = "msg " + role;
+
+    var avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "user" ? "我" : "AI";
+
+    var bubbleWrap = document.createElement("div");
+    bubbleWrap.className = "bubble-wrap";
+
+    var bubble = document.createElement("div");
+    bubble.className = "bubble";
+    if (role === "user") bubble.textContent = text;
+    else bubble.innerHTML = renderMarkdown(text);
+
+    bubbleWrap.appendChild(bubble);
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubbleWrap);
+    el.messages.appendChild(wrap);
+    scrollBottom();
+
+    return { root: wrap, wrap: bubbleWrap, bubble: bubble };
+  }
+
+  function createAnswerNode() {
+    var node = createMessage("assistant", "");
+
+    var typing = document.createElement("div");
+    typing.className = "typing";
+    typing.innerHTML = "<i></i><i></i><i></i>";
+    node.bubble.appendChild(typing);
+
+    var cites = document.createElement("div");
+    cites.className = "cites";
+    cites.style.display = "none";
+    node.wrap.appendChild(cites);
+
+    var foot = document.createElement("div");
+    foot.className = "msg-foot";
+    foot.innerHTML = "<span class='tok'></span><button type='button' class='copy-msg'>复制全文</button>";
+    node.wrap.appendChild(foot);
+
+    node.typing = typing;
+    node.cites = cites;
+    node.tok = foot.querySelector(".tok");
+    node.foot = foot;
+    return node;
+  }
+
+  function renderCites(node, hits) {
+    if (!hits.length) return;
+    node.cites.style.display = "";
+    node.cites.innerHTML = "<div class='cite-head'>引用来源（点击展开原文分块）</div>";
+
+    hits.forEach(function (h, i) {
+      var d = document.createElement("details");
+      d.className = "cite";
+      var head = document.createElement("summary");
+      head.innerHTML = "<span class='no'>[" + (i + 1) + "]</span>" +
+        escapeHtml(h.chunk.fileName) + " · 第 " + (h.chunk.idx + 1) + " 段" +
+        "<span class='score'>相关度 " + h.rel.toFixed(2) + "</span>";
+      var body = document.createElement("div");
+      body.className = "body";
+      body.textContent = h.chunk.text;
+      d.appendChild(head);
+      d.appendChild(body);
+      node.cites.appendChild(d);
+    });
+  }
+
+  function scrollBottom() { el.messages.scrollTop = el.messages.scrollHeight; }
+
+  function buildMessages(question, hits) {
+    var cfg = readConfig();
+    var msgs = [{ role: "system", content: cfg.system }];
+
+    history.slice(-4).forEach(function (h) { msgs.push({ role: h.role, content: h.content }); });
+
+    var ctx = "";
+    if (hits.length) {
+      ctx = hits.map(function (h, i) {
+        return "[" + (i + 1) + "] 来源：" + h.chunk.fileName + "（第 " + (h.chunk.idx + 1) + " 段）\n" + h.chunk.text;
+      }).join("\n\n");
+      msgs.push({
+        role: "user",
+        content: "【参考资料】\n" + ctx + "\n\n【用户问题】\n" + question
+      });
+    } else {
+      msgs.push({
+        role: "user",
+        content: "【用户问题】\n" + question + "\n\n（本地知识库未检索到相关分块，请明确说明“知识库中未提及”，并给出通用性建议。）"
+      });
+    }
+    return msgs;
+  }
+
+  function send() {
+    var question = el.input.value.trim();
+    if (!question || controller) return;
+
+    var cfg = readConfig();
+    if (!cfg.baseURL || !cfg.model) { setStatus("请先填写 BaseURL 与 Model ID"); return; }
+    if (!cfg.apiKey) { setStatus("请先填写 API Key"); return; }
+    if (!idx.chunks.length) { toast("知识库为空，请先上传文件或点击“加载内置知识库”", true); }
+
+    el.input.value = "";
+    autoGrow();
+
+    createMessage("user", question);
+    var node = createAnswerNode();
+
+    var hits = retrieve(question, cfg.topK);
+    logRetrieval(question, hits, hits.reduce(function (n, h) { return n + h.chunk.text.length; }, 0));
+    renderCites(node, hits);
+
+    var url = cfg.baseURL + "/chat/completions";
+    var headers = { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.apiKey };
+    var body = {
+      model: cfg.model,
+      messages: buildMessages(question, hits),
+      stream: !!el.stream.checked,
+      temperature: 0.3,
+      max_tokens: 1600
+    };
+
+    logRequest(url, headers, body);
+
+    controller = new AbortController();
+    el.sendBtn.disabled = true;
+    el.stopBtn.hidden = false;
+    setStatus("已检索 " + hits.length + " 个分块，正在请求模型…");
+
+    var answer = "";
+    var usage = null;
+    var started = Date.now();
+    var chunkCount = 0;
+    var rawChunks = [];
+
+    function done() {
+      if (node.typing.parentNode) node.typing.remove();
+      node.bubble.innerHTML = renderMarkdown(answer || "（模型未返回内容）");
+      node.tok.textContent = (usage ? "tokens " + usage.total_tokens + " · " : "") +
+        ((Date.now() - started) / 1000).toFixed(1) + "s · 检索 " + hits.length + " 段";
+      if (usage && usage.total_tokens) el.usageMeta.textContent = "tokens: " + usage.total_tokens;
+      history.push({ role: "user", content: question });
+      history.push({ role: "assistant", content: answer });
+      controller = null;
+      el.sendBtn.disabled = false;
+      el.stopBtn.hidden = true;
+      setStatus("完成 · 用时 " + ((Date.now() - started) / 1000).toFixed(1) + "s");
+      scrollBottom();
+    }
+
+    function fail(err) {
+      if (node.typing.parentNode) node.typing.remove();
+      node.bubble.classList.add("error-bubble");
+      node.bubble.textContent = "请求失败：" + (err && err.message ? err.message : err);
+      node.foot.remove();
+      controller = null;
+      el.sendBtn.disabled = false;
+      el.stopBtn.hidden = true;
+      setStatus("请求失败，详见 Console");
+      console.group("%c ✕ 请求失败 ", CSS_ERR);
+      console.error(err);
+      console.log("失败的请求数据：", { url: url, headers: headers, body: body });
+      console.groupEnd();
+      scrollBottom();
+    }
+
+    fetch(url, { method: "POST", headers: headers, body: JSON.stringify(body), signal: controller.signal })
+      .then(function (res) {
+        console.log("%c HTTP 状态码 ", "color:#f59e0b;font-weight:700", res.status, res.statusText);
+        if (!res.ok) {
+          return res.text().then(function (t) { throw new Error("HTTP " + res.status + " " + (t || res.statusText)); });
+        }
+
+        if (!body.stream) {
+          return res.json().then(function (data) {
+            logResponse(data);
+            usage = data.usage || null;
+            var m = data.choices && data.choices[0] && data.choices[0].message;
+            answer = (m && m.content) || "";
+            done();
+          });
+        }
+
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder("utf-8");
+        var buffer = "";
+
+        function handle(line) {
+          if (line.indexOf("data:") !== 0) return;
+          var payload = line.slice(5).trim();
+          if (!payload || payload === "[DONE]") return;
+
+          var obj;
+          try { obj = JSON.parse(payload); } catch (e) { return; }
+
+          chunkCount++;
+          rawChunks.push(obj);
+
+          var delta = obj.choices && obj.choices[0] && obj.choices[0].delta;
+          if (delta && delta.content) {
+            answer += delta.content;
+            if (node.typing.parentNode) node.typing.remove();
+            node.bubble.innerHTML = renderMarkdown(answer);
+            scrollBottom();
+          }
+          if (obj.usage) usage = obj.usage;
+        }
+
+        function read() {
+          return reader.read().then(function (r) {
+            if (r.done) {
+              console.log("%c ③ ← 从大模型接收到的数据（流式汇总） ", CSS_RES);
+              console.log("分块总数：", chunkCount);
+              console.log("全部分块对象：", rawChunks);
+              console.log("拼接后的完整回复：", answer);
+              if (usage) console.log("Token 用量：", usage);
+              done();
+              return;
+            }
+            buffer += decoder.decode(r.value, { stream: true });
+            var lines = buffer.split("\n");
+            buffer = lines.pop();
+            for (var i = 0; i < lines.length; i++) handle(lines[i].trim());
+            return read();
+          });
+        }
+
+        return read();
+      })
+      .catch(function (err) {
+        if (err && err.name === "AbortError") {
+          console.warn("%c ⏹ 已停止生成 ", "color:#f59e0b;font-weight:700");
+          if (node.typing.parentNode) node.typing.remove();
+          node.bubble.innerHTML = renderMarkdown(answer + "\n\n> （已停止生成）");
+          controller = null;
+          el.sendBtn.disabled = false;
+          el.stopBtn.hidden = true;
+          setStatus("已停止生成");
+          return;
+        }
+        fail(err);
+      });
+  }
+
+  el.sendBtn.addEventListener("click", send);
+  el.stopBtn.addEventListener("click", function () { if (controller) controller.abort(); });
+
+  function autoGrow() {
+    el.input.style.height = "auto";
+    el.input.style.height = Math.min(el.input.scrollHeight, 150) + "px";
+  }
+
+  el.input.addEventListener("input", autoGrow);
+  el.input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  el.quick.addEventListener("click", function (e) {
+    if (e.target.tagName !== "BUTTON") return;
+    el.input.value = e.target.textContent;
+    autoGrow();
+    el.input.focus();
+  });
+
+  el.messages.addEventListener("click", function (e) {
+    var t = e.target;
+    if (t.classList.contains("copy-btn")) {
+      var code = codeStore[t.getAttribute("data-code")] || "";
+      navigator.clipboard.writeText(code).then(function () {
+        t.textContent = "已复制";
+        setTimeout(function () { t.textContent = "复制"; }, 1300);
+      }).catch(function () { t.textContent = "复制失败"; });
+      return;
+    }
+    if (t.classList.contains("copy-msg")) {
+      var bubble = t.closest(".bubble-wrap").querySelector(".bubble");
+      navigator.clipboard.writeText(bubble.innerText).then(function () {
+        t.textContent = "已复制";
+        setTimeout(function () { t.textContent = "复制全文"; }, 1300);
+      }).catch(function () { t.textContent = "复制失败"; });
+    }
+  });
+
+  /* =====================================================================
+     10. 初始化
+     ===================================================================== */
+  loadConfig();
+  kbLoad();
+  buildIndex();
+  renderKB();
+  if (!kbFiles.length) loadSamples(true);
+
+  createMessage("assistant",
+    "你好，我是基于**本地知识库**的问答助手。\n\n" +
+    "使用步骤：\n" +
+    "1. 在左侧上传文件（支持 **TXT / MD / PDF / DOC / DOCX / PPT / PPTX**），系统自动解析并分块建库；\n" +
+    "2. 提问后先做 **BM25 检索**，把命中的分块拼接进 Prompt，再由大模型生成回答；\n" +
+    "3. 回答下方可展开**引用来源**，每个引用都能回溯到原文分块。\n\n" +
+    "已为你载入 2 个内置知识库文件，可直接提问试试。"
+  );
+
+  console.log("%c 知识库问答（RAG）已就绪 ", "background:#0d9488;color:#fff;padding:2px 8px;border-radius:4px");
+  console.log("当前知识库：", kbFiles.map(function (f) { return f.name + " → " + f.chunks.length + " 段"; }));
+  console.log("提示：提问后控制台会依次输出 ① 检索结果 ② 发送给大模型的数据 ③ 从大模型接收的数据");
+})();
+</script>
+</body>
+</html>
