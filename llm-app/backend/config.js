@@ -18,6 +18,14 @@ module.exports = {
     // 离线演示模式：置 true 时不调用真实大模型，返回模拟流式回复（便于无网络/无额度时演示）
     mock: String(process.env.LLM_MOCK || 'false').toLowerCase() === 'true'
   },
+  // 多模态：硅基流动（生图 OpenMOSS-Team/MOSS-Image，语音 Qwen/Qwen2.5-Omni）
+  multimodal: {
+    baseURL: (process.env.SF_BASE_URL || 'https://api.siliconflow.cn/v1').replace(/\/+$/, ''),
+    apiKey: process.env.SF_API_KEY || '',
+    imageModel: process.env.SF_IMAGE_MODEL || 'OpenMOSS-Team/MOSS-Image',
+    speechModel: process.env.SF_SPEECH_MODEL || 'Qwen/Qwen2.5-Omni-7B',
+    timeout: num(process.env.SF_TIMEOUT, 120000)
+  },
   db: {
     enabled: String(process.env.DB_ENABLED || 'false').toLowerCase() === 'true',
     host: process.env.DB_HOST || '127.0.0.1',

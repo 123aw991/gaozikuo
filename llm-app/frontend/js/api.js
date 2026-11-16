@@ -40,11 +40,12 @@ const API = (function () {
     return data;
   }
 
-  /* 文件上传（带进度回调） */
-  function upload(path, file, onProgress) {
+  /* 文件上传（带进度回调）；extra 为附加表单字段对象 */
+  function upload(path, file, onProgress, extra) {
     const url = BASE + path;
     const fd = new FormData();
     fd.append('file', file);
+    if (extra) Object.keys(extra).forEach((k) => fd.append(k, extra[k]));
     logReq('POST', url, { 'Content-Type': 'multipart/form-data' }, fd);
 
     return new Promise((resolve, reject) => {

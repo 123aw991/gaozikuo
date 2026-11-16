@@ -5,6 +5,35 @@
 
 ---
 
+## 00. AI 生图与语音识别 `/api/recognition`
+
+> 多模态能力统一走硅基流动 `https://api.siliconflow.cn/v1`。请求/响应报文在服务端终端打印（base64 自动截断）。
+
+### 00.1 文生图
+`POST /api/recognition/image/generate`  body: `{ "prompt": "...", "imageSize": "1024x1024", "steps": 20, "guidance": 7.5 }`
+
+- 上游：`POST {SF_BASE_URL}/images/generations`，model `OpenMOSS-Team/MOSS-Image`，header `X-Enable-Watermark: 0`。
+- 上游请求体：`{ model, prompt, image_size, num_inference_steps, guidance_scale }`。
+- 上游响应：`{ images: [{ url }] }`（或 `b64_json`）。
+- 响应 `data`：`{ imageUrl, prompt, imageSize, steps, guidance, model, mode, count, usage, raw }`。
+- 未配置 `SF_API_KEY` 或失败 → `imageUrl` 为本地 SVG data URI，`mode` 标注演示来源。
+
+### 00.2 语音识别（ASR）
+`POST /api/recognition/speech/transcribe`  `multipart/form-data`，字段 `file`（音频 ≤12MB）、`fallbackText`（浏览器实时转写兜底，可选）
+
+- 上游：`POST {SF_BASE_URL}/audio/transcriptions`，`-F file=... -F model=FunAudioLLM/SenseVoiceSmall`（可用 `SF_SPEECH_MODEL` 改 Qwen 等模型）。
+- 上游响应：`{ text: "...", duration?, usage? }`。
+- 响应 `data`：`{ text, filename, duration, model, mode, usage, raw }`。
+- 失败/未配置 Key → 返回 `fallbackText` 或示例文本，`mode` 标注演示来源。
+
+### 00.3 转写文本整理
+`POST /api/recognition/speech/analyze`  body: `{ "text": "..." }` → `{ summary, keywords[], intent, mode, usage }`
+
+### 00.4 状态
+`GET /api/recognition/status` → `{ imageModel, speechModel, baseURL, apiKeySet, note }`
+
+---
+
 ## 0. 商业评论情感分类 `/api/sentiment`
 
 > 上传 Excel → `xlsx` 解析「评论内容」列 → LLM 批量分类（好评/中评/差评）→ 返回统计、精选评论与明细。

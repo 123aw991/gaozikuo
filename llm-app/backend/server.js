@@ -12,6 +12,7 @@ const aiRoutes = require('./routes/ai');
 const convRoutes = require('./routes/conversations');
 const kbRoutes = require('./routes/kb');
 const sentimentRoutes = require('./routes/sentiment');
+const recognitionRoutes = require('./routes/recognition');
 
 async function main() {
   await store.init();
@@ -49,6 +50,7 @@ async function main() {
   app.use('/api/conversations', convRoutes);
   app.use('/api/kb', kbRoutes);
   app.use('/api/sentiment', sentimentRoutes);
+  app.use('/api/recognition', recognitionRoutes);
 
   app.use((req, res) => res.status(404).json({ code: 4040, msg: 'Not Found', data: null }));
 

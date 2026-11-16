@@ -11,6 +11,7 @@
 | 模块 | 说明 |
 |---|---|
 | 智能问答 | 基于本地知识库的流式问答；会话管理（新建/重命名/删除/历史加载）；RAG 检索开关；引用来源溯源 |
+| **AI 生图与语音识别** | 文生图用 `OpenMOSS-Team/MOSS-Image`（硅基流动 `/images/generations`，支持中文/长文本排版）；语音识别用 `FunAudioLLM/SenseVoiceSmall`（`/audio/transcriptions`，Qwen 多模态可切换）+ 浏览器实时录音；转写文本可整理摘要/关键词/意图 |
 | **商业评论情感分类** | 上传 Excel（.xlsx/.xls），LLM 逐条判断好评/中评/差评；前端饼状图展示分布、精选评论、完整明细；大模型收发报文在服务端终端与浏览器控制台打印；附 3 份各 20 条的模拟数据 |
 | 知识库管理 | 上传 TXT / MD / PDF / DOC / DOCX / PPT / PPTX，服务端自动解析、语义切分、入库建索引；支持上传进度、解析状态、分块预览、删除、检索测试 |
 | RAG 检索 | BM25（中文 bigram + 英文词），拼接 Top-K 命中分块进提示词，回答标注来源编号 |
@@ -31,7 +32,8 @@ llm-app/
 │  │  ├─ ai.js               # /api/ai/chat  流式问答（SSE）
 │  │  ├─ conversations.js    # /api/conversations 会话增删改查 + 消息
 │  │  ├─ kb.js               # /api/kb 文档上传/列表/删除/分块/检索/统计
-│  │  └─ sentiment.js        # /api/sentiment Excel 解析 + LLM 情感分类 + 兜底降级
+│  │  ├─ sentiment.js        # /api/sentiment Excel 解析 + LLM 情感分类 + 兜底降级
+│  │  └─ recognition.js      # /api/recognition 生图（OpenMOSS）/ 语音识别（SenseVoice）/ 文本整理
 │  ├─ services/
 │  │  ├─ store.js            # 存储抽象：MySQL 或本地 JSON（运行时切换）
 │  │  ├─ parser.js           # 文件解析：txt/md/pdf/doc/docx/ppt/pptx/csv/json
@@ -60,6 +62,14 @@ llm-app/
 3. 请求体（含完整提示词与评论列表）与响应体（LLM 原始 JSON）在服务端终端打印；HTTP 请求/响应在浏览器 Console 打印。
 4. 若 API 欠费/限流/网络异常，自动降级为关键词启发式分类，页面 `mode` 会标注来源。
 5. `npm run gen:samples` 可重新生成模拟数据。
+
+### 生图与语音识别使用
+
+浏览器打开 `http://localhost:8325/recognition.html`：
+1. **AI 生图**：填提示词/尺寸/步数/引导系数 → 调用硅基流动 `OpenMOSS-Team/MOSS-Image` → 展示并下载图片。
+2. **语音识别**：上传 MP3/WAV/M4A/WEBM 或浏览器实时录音 → 调用 `FunAudioLLM/SenseVoiceSmall` ASR → 显示逐字稿 → 可再整理摘要/关键词/意图。
+3. 在 `.env` 配 `SF_API_KEY`（硅基流动）后走真实接口；未配置或调用失败时自动用本地演示结果（生图为 SVG 示意图、语音为示例文本），页面 `mode` 会标注。
+4. 想用 Qwen 多模态做语音识别：把 `SF_SPEECH_MODEL=Qwen/Qwen2.5-Omni-7B`，并将路由中的 `/audio/transcriptions` 切换为 chat/completions 的 `input_audio` 内容块即可（文档见 `yuan_interface.md`）。
 
 ---
 

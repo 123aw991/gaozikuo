@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 生图与语音识别 · LLM 应用设计实验</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-head">
+      <div class="logo">🎨</div>
+      <h2>生图与语音</h2>
+      <a class="back" href="index.html">门户</a>
+    </div>
+    <div class="side-body">
+      <a class="btn primary" href="index.html" style="text-align:center;text-decoration:none">← 返回门户</a>
+
+      <div class="rec-tabs">
+        <button class="rec-tab active" data-tab="image">🎨 AI 生图</button>
+        <button class="rec-tab" data-tab="speech">🎤 语音识别</button>
+      </div>
+
+      <div class="panel" style="padding:14px" id="imageCtrl">
+        <h3 style="font-size:13px;margin-bottom:10px">🖼 生图参数</h3>
+        <div class="field-label">提示词（Prompt）</div>
+        <textarea id="promptInput" class="prompt-input" placeholder="描述你想生成的画面，例如：一只戴墨镜的柴犬在海边冲浪，写实摄影风格">一只戴墨镜的柴犬在海边冲浪，写实摄影风格，阳光明媚</textarea>
+        <div class="field-row">
+          <div>
+            <div class="field-label">图片尺寸</div>
+            <select id="imgSize" class="sel">
+              <option>1024x1024</option><option>960x1280</option><option>1280x960</option>
+              <option>768x1344</option><option>1344x768</option><option>1536x672</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">推理步数</div>
+            <input id="stepsInput" class="num-input" type="number" min="1" max="50" value="20" />
+          </div>
+        </div>
+        <div class="field-label">引导系数（guidance_scale）</div>
+        <input id="guidanceInput" class="num-input" type="number" min="0" max="20" step="0.5" value="7.5" />
+        <button class="btn primary" id="genBtn" style="width:100%;margin-top:12px">✨ 生成图片</button>
+        <div class="quick-prompts" id="quickPrompts">
+          <button>赛博朋克风格的城市夜景，霓虹灯，雨天</button>
+          <button>一张中文海报：标题「智能客服」，科技蓝风格</button>
+          <button>水墨画风格的山水画，云雾缭绕</button>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:14px" id="speechCtrl" hidden>
+        <h3 style="font-size:13px;margin-bottom:10px">🎤 上传音频识别</h3>
+        <div class="dropzone" id="audioDrop" style="padding:18px 12px">
+          <div class="icon">🎵</div>
+          <div class="t1">点击或拖拽音频文件</div>
+          <div class="t2">MP3 / WAV / M4A / WEBM / OGG（≤12MB）<br/>FunAudioLLM/SenseVoiceSmall 识别</div>
+          <input type="file" id="audioInput" accept="audio/*" hidden />
+        </div>
+        <button class="btn" id="recStart" style="width:100%;margin-top:10px">● 浏览器录音（实时转写）</button>
+        <button class="btn" id="recStop" style="width:100%;margin-top:6px" disabled>■ 停止录音</button>
+        <div class="rec-status" id="recStatus">未开始 · 录音使用浏览器 Web Speech API</div>
+        <button class="btn primary" id="transBtn" style="width:100%;margin-top:8px" disabled>🎤 识别语音</button>
+        <div id="audioInfo" style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.7"></div>
+      </div>
+
+      <div class="tip">
+        模型请求与响应的<b>完整报文</b>打印在服务端终端；HTTP 请求/响应打印在浏览器 <b>Console（F12）</b>。<br/>
+        未配置 <b>SF_API_KEY</b> 时自动使用本地演示结果，链路照常可跑通。
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="chat-head">
+      <span class="title" id="recTitle">AI 生图 · OpenMOSS-Team/MOSS-Image</span>
+      <span class="spacer"></span>
+      <span class="switch" style="color:#7189ad;font-family:Consolas,monospace" id="recMeta">等待输入…</span>
+    </header>
+
+    <div class="rec-layout">
+      <section class="panel" id="imagePanel">
+        <h3>🖼 生成的图片 <span class="badge" id="imgBadge">OpenMOSS-Team/MOSS-Image</span></h3>
+        <div class="rec-empty" id="imageEmpty">
+          <div style="font-size:48px;margin-bottom:14px">🎨</div>
+          <h3>输入提示词，点击「生成图片」</h3>
+          <p>生图模型：<b style="color:#7ee0d0">OpenMOSS-Team/MOSS-Image</b>（硅基流动）<br/>支持中文提示词、长文本排版，可指定尺寸、步数与引导系数。</p>
+        </div>
+        <div class="gen-result" id="genResult" hidden>
+          <div class="gen-img-wrap"><img id="genImg" alt="生成结果" /></div>
+          <div class="gen-info">
+            <div class="field-label">本次请求参数</div>
+            <pre id="genParams"></pre>
+            <a class="btn" id="downloadImg" download="generated-image.png" style="display:inline-block;text-decoration:none;margin-top:10px">⬇ 下载图片</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="speechPanel" hidden>
+        <h3>🎤 语音识别结果 <span class="badge" id="asrBadge">FunAudioLLM/SenseVoiceSmall</span></h3>
+        <div class="rec-empty" id="speechEmpty">
+          <div style="font-size:48px;margin-bottom:14px">🎤</div>
+          <h3>上传音频或开始录音</h3>
+          <p>识别模型：<b style="color:#7ee0d0">FunAudioLLM/SenseVoiceSmall</b>（硅基流动 ASR）<br/>识别后可继续用大模型整理摘要、关键词与意图。</p>
+        </div>
+        <div id="speechResult" hidden>
+          <div class="transcript-wrap">
+            <h4>识别文本（可编辑）</h4>
+            <textarea id="transcript" placeholder="语音识别结果会显示在这里…"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;margin:10px 0">
+            <button class="btn" id="analyzeBtn">🧠 整理摘要/关键词/意图</button>
+          </div>
+          <div class="speech-cards" id="speechCards"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/api.js"></script>
+<script src="js/recognition.js"></script>
+</body>
+</html>
