@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>商业评论情感分类 · LLM 应用设计实验</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-head">
+      <div class="logo">📊</div>
+      <h2>情感分类</h2>
+      <a class="back" href="index.html">门户</a>
+    </div>
+    <div class="side-body">
+      <a class="btn primary" href="index.html" style="text-align:center;text-decoration:none">← 返回门户</a>
+      <div class="panel" style="padding:14px">
+        <h3 style="font-size:13px;margin-bottom:10px">📥 上传评论 Excel</h3>
+        <div class="dropzone" id="dropzone" style="padding:20px 12px">
+          <div class="icon">⬆</div>
+          <div class="t1">点击或拖拽 .xlsx 文件</div>
+          <div class="t2">文件需含「评论内容」列<br />每行一条商业评论</div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" hidden />
+        </div>
+        <div class="progress" id="progress"><i></i></div>
+        <button class="btn" id="analyzeBtn" style="width:100%;margin-top:10px" disabled>开始情感分类</button>
+        <div id="fileInfo" style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.7"></div>
+      </div>
+      <div class="panel" style="padding:14px">
+        <h3 style="font-size:13px;margin-bottom:10px">🧪 模拟数据（各 20 条）</h3>
+        <div id="sampleList" class="sample-list"></div>
+      </div>
+      <div class="tip">
+        大模型<b>发送与接收</b>的完整报文会打印在服务端终端与浏览器 <b>Console（F12）</b>。
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="chat-head">
+      <span class="title">商业评论情感分类 · 饼图分析</span>
+      <span class="spacer"></span>
+      <span class="switch" style="color:#7189ad;font-family:Consolas,monospace" id="metaInfo">等待上传…</span>
+    </header>
+
+    <div class="sent-layout" id="result">
+      <!-- 空状态 -->
+      <div class="sent-empty" id="emptyState">
+        <div style="font-size:52px;margin-bottom:16px">📊</div>
+        <h3>上传 Excel 开始情感分析</h3>
+        <p>LLM 将逐条判断评论为 <b style="color:#34d399">好评</b> / <b style="color:#fbbf24">中评</b> / <b style="color:#f87171">差评</b>，<br/>并以饼状图展示分布、自动挑选每类精选评论。</p>
+      </div>
+
+      <div class="chart-panel" id="chartPanel" hidden>
+        <section class="panel chart-card">
+          <h3>🥧 情感分布饼状图 <span class="badge" id="totalBadge">0 条</span></h3>
+          <div class="chart-wrap">
+            <svg id="pie" viewBox="0 0 260 260" width="260" height="260"></svg>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="stat-row" style="margin-top:16px">
+            <div class="stat"><b id="cGood" style="color:#34d399">0</b><span>好评</span></div>
+            <div class="stat"><b id="cMid" style="color:#fbbf24">0</b><span>中评</span></div>
+            <div class="stat"><b id="cBad" style="color:#f87171">0</b><span>差评</span></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3>⭐ 精选评论 <span class="badge">每类最具代表性</span></h3>
+          <div id="featured" class="featured-list"></div>
+        </section>
+      </div>
+
+      <section class="panel" id="tablePanel" hidden style="grid-column:1 / -1">
+        <h3>📋 全部评论分类明细</h3>
+        <div style="overflow-x:auto">
+          <table class="review-table">
+            <thead><tr><th>序号</th><th>评论内容</th><th>分类</th><th>判断依据</th><th>用户</th><th>时间</th></tr></thead>
+            <tbody id="reviewBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/api.js"></script>
+<script src="js/sentiment.js"></script>
+</body>
+</html>

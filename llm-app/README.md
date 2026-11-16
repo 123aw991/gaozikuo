@@ -11,6 +11,7 @@
 | 模块 | 说明 |
 |---|---|
 | 智能问答 | 基于本地知识库的流式问答；会话管理（新建/重命名/删除/历史加载）；RAG 检索开关；引用来源溯源 |
+| **商业评论情感分类** | 上传 Excel（.xlsx/.xls），LLM 逐条判断好评/中评/差评；前端饼状图展示分布、精选评论、完整明细；大模型收发报文在服务端终端与浏览器控制台打印；附 3 份各 20 条的模拟数据 |
 | 知识库管理 | 上传 TXT / MD / PDF / DOC / DOCX / PPT / PPTX，服务端自动解析、语义切分、入库建索引；支持上传进度、解析状态、分块预览、删除、检索测试 |
 | RAG 检索 | BM25（中文 bigram + 英文词），拼接 Top-K 命中分块进提示词，回答标注来源编号 |
 | 大模型 | 兼容 OpenAI 接口的任意厂商（默认七牛 `qiniu/conatus-free`），`.env` 配置，密钥不写入前端 |
@@ -29,7 +30,8 @@ llm-app/
 │  ├─ routes/
 │  │  ├─ ai.js               # /api/ai/chat  流式问答（SSE）
 │  │  ├─ conversations.js    # /api/conversations 会话增删改查 + 消息
-│  │  └─ kb.js               # /api/kb 文档上传/列表/删除/分块/检索/统计
+│  │  ├─ kb.js               # /api/kb 文档上传/列表/删除/分块/检索/统计
+│  │  └─ sentiment.js        # /api/sentiment Excel 解析 + LLM 情感分类 + 兜底降级
 │  ├─ services/
 │  │  ├─ store.js            # 存储抽象：MySQL 或本地 JSON（运行时切换）
 │  │  ├─ parser.js           # 文件解析：txt/md/pdf/doc/docx/ppt/pptx/csv/json
@@ -37,14 +39,27 @@ llm-app/
 │  │  ├─ llm.js              # 大模型调用（流式/非流式）+ 离线演示模式
 │  │  └─ context.js          # 提示词拼装：系统提示 + 检索资料 + 历史 + 用户问题
 │  ├─ sql/schema.sql         # MySQL 8.0 建表 + 测试数据（≥8 条）
-│  └─ scripts/init-db.js     # 数据库初始化脚本
+│  └─ scripts/
+│     ├─ init-db.js          # 数据库初始化脚本
+│     └─ gen-samples.js      # 生成 3 份各 20 条评论的 Excel 模拟数据
+├─ samples/                  # 3 份模拟数据（餐饮/数码/电商，各 20 条评论）
 └─ frontend/                 # 原生前端（无第三方依赖）
    ├─ index.html             # 门户：项目说明、架构、服务状态
    ├─ chat.html + js/chat.js  # 智能问答页
    ├─ kb.html + js/kb.js      # 知识库管理页
+   ├─ sentiment.html + js/sentiment.js  # 商业评论情感分类页（饼图 + 精选评论）
    ├─ css/style.css          # 统一深色主题
    └─ js/{api,md}.js         # 请求封装（控制台日志）/ 轻量 Markdown 渲染
 ```
+
+### 情感分类使用
+
+浏览器打开 `http://localhost:8325/sentiment.html`：
+1. 侧栏「模拟数据」可直接下载 3 份 Excel（各 20 条评论），或上传自己的 `.xlsx`（含「评论内容」列）。
+2. 点击「开始情感分类」→ LLM 批量分类为好评/中评/差评 → 饼状图 + 精选评论 + 明细表。
+3. 请求体（含完整提示词与评论列表）与响应体（LLM 原始 JSON）在服务端终端打印；HTTP 请求/响应在浏览器 Console 打印。
+4. 若 API 欠费/限流/网络异常，自动降级为关键词启发式分类，页面 `mode` 会标注来源。
+5. `npm run gen:samples` 可重新生成模拟数据。
 
 ---
 

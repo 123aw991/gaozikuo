@@ -5,6 +5,37 @@
 
 ---
 
+## 0. 商业评论情感分类 `/api/sentiment`
+
+> 上传 Excel → `xlsx` 解析「评论内容」列 → LLM 批量分类（好评/中评/差评）→ 返回统计、精选评论与明细。
+> 大模型请求体（含完整提示词）与响应体（原始 JSON）统一由服务端终端打印；浏览器 Console 打印 HTTP 请求/响应。
+
+### 0.1 情感分类
+`POST /api/sentiment/analyze`  `multipart/form-data`，字段名 `file`（`.xlsx` / `.xls`，≤10MB，≤200 条）
+
+响应 `data`：
+```json
+{
+  "filename": "餐饮服务评论.xlsx",
+  "total": 20,
+  "stats": { "好评": 10, "中评": 6, "差评": 4 },
+  "labels": ["好评", "中评", "好评", "..."],
+  "reviews": [ { "no": 1, "text": "味道很棒，服务周到！", "user": "月影1", "time": "2026-10-01", "label": "好评", "reason": "明显称赞并表示再来" } ],
+  "featured": [ { "label": "好评", "no": 4, "text": "…", "reason": "…" }, { "label": "中评", "…" : "…" }, { "label": "差评", "…" : "…" } ],
+  "usage": { "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0 },
+  "mode": "qiniu/conatus-free"
+}
+```
+
+- `featured`：每类挑一条关键词信号最强的评论作为「精选评论」。
+- `mode`：实际分类来源（模型名 / `演示模式（关键词启发式）` / `启发式兜底（LLM：…）`）。
+- LLM 失败（限流/欠费/格式异常）时自动降级为关键词启发式，接口仍返回 `code=0`。
+
+### 0.2 模拟数据列表
+`GET /api/sentiment/sample-files` → `data.files[]`：`{ "name": "餐饮服务评论.xlsx", "url": "/samples/…" }`（3 份各 20 条，可通过 `/samples/<文件名>` 下载）
+
+---
+
 ## 1. 会话管理 `/api/conversations`
 
 ### 1.1 会话列表

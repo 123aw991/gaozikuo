@@ -11,6 +11,7 @@ const rag = require('./services/rag');
 const aiRoutes = require('./routes/ai');
 const convRoutes = require('./routes/conversations');
 const kbRoutes = require('./routes/kb');
+const sentimentRoutes = require('./routes/sentiment');
 
 async function main() {
   await store.init();
@@ -21,6 +22,7 @@ async function main() {
   app.use(cors());
   app.use(express.json({ limit: '2mb' }));
   app.use(express.static(config.frontendDir));
+  app.use('/samples', express.static(path.join(__dirname, '..', 'samples')));
 
   app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) {
@@ -46,6 +48,7 @@ async function main() {
   app.use('/api/ai', aiRoutes);
   app.use('/api/conversations', convRoutes);
   app.use('/api/kb', kbRoutes);
+  app.use('/api/sentiment', sentimentRoutes);
 
   app.use((req, res) => res.status(404).json({ code: 4040, msg: 'Not Found', data: null }));
 
