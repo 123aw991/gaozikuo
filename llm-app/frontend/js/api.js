@@ -3,7 +3,8 @@
  * （满足实验要求：控制台输出请求 / 响应）
  */
 const API = (function () {
-  const BASE = location.origin;
+  // file:// 双击打开时，请求转到本地后端服务；http:// 打开时用同源
+  const BASE = location.protocol === 'file:' ? 'http://localhost:8325' : location.origin;
 
   const CSS_REQ = 'color:#2563eb;font-weight:700';
   const CSS_RES = 'color:#0d9488;font-weight:700';

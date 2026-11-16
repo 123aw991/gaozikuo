@@ -39,7 +39,7 @@
     el.imageCtrl.hidden = !isImage; el.speechCtrl.hidden = isImage;
     el.imagePanel.hidden = !isImage; el.speechPanel.hidden = isImage;
     el.recTitle.textContent = isImage
-      ? 'AI 生图 · OpenMOSS-Team/MOSS-Image'
+      ? 'AI 生图 · Kwai-Kolors/Kolors（可切 OpenMOSS）'
       : '语音识别 · FunAudioLLM/SenseVoiceSmall';
     el.recMeta.textContent = '等待输入…';
   }));
@@ -66,10 +66,13 @@
       const d = res.data;
       el.imageEmpty.hidden = true;
       el.genResult.hidden = false;
+      el.genImg.style.opacity = '0.3';
+      el.genImg.onload = () => { el.genImg.style.opacity = '1'; };
       el.genImg.src = d.imageUrl;
       el.genParams.textContent = JSON.stringify({
         model: d.model, mode: d.mode, prompt: d.prompt, imageSize: d.imageSize,
-        steps: d.steps, guidance: d.guidance, count: d.count, usage: d.usage
+        steps: d.steps, guidance: d.guidance, count: d.count, usage: d.usage,
+        localFile: d.localFile
       }, null, 2);
       el.downloadImg.href = d.imageUrl;
       el.downloadImg.download = 'openmoss-' + Date.now() + '.png';

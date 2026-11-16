@@ -15,7 +15,8 @@
 - 上游：`POST {SF_BASE_URL}/images/generations`，model `OpenMOSS-Team/MOSS-Image`，header `X-Enable-Watermark: 0`。
 - 上游请求体：`{ model, prompt, image_size, num_inference_steps, guidance_scale }`。
 - 上游响应：`{ images: [{ url }] }`（或 `b64_json`）。
-- 响应 `data`：`{ imageUrl, prompt, imageSize, steps, guidance, model, mode, count, usage, raw }`。
+- 响应 `data`：`{ imageUrl, localFile, upstreamUrl, prompt, imageSize, steps, guidance, model, mode, count, usage, raw }`。
+  - `imageUrl`：稳定本地地址 `/generated/xxx.png`（图片已下载到 `frontend/generated/`；下载失败时回退上游临时链接）。
 - 未配置 `SF_API_KEY` 或失败 → `imageUrl` 为本地 SVG data URI，`mode` 标注演示来源。
 
 ### 00.2 语音识别（ASR）

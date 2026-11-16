@@ -24,6 +24,7 @@ async function main() {
   app.use(express.json({ limit: '2mb' }));
   app.use(express.static(config.frontendDir));
   app.use('/samples', express.static(path.join(__dirname, '..', 'samples')));
+  app.use('/generated', express.static(path.join(__dirname, '..', 'frontend', 'generated')));
 
   app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) {

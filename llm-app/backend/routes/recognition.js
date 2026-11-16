@@ -8,12 +8,18 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const config = require('../config');
 const llm = require('../services/llm');
+
+const GEN_DIR = path.join(__dirname, '..', '..', 'frontend', 'generated');
+fs.mkdirSync(GEN_DIR, { recursive: true });
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 12 * 1024 * 1024 } });
 const ok = (res, data, msg) => res.json({ code: 0, msg: msg || 'ok', data });
 const brief = (s, n) => { const t = String(s == null ? '' : s); const m = n || 300; return t.length > m ? t.slice(0, m) + '…（共 ' + t.length + ' 字符）' : t; };
+const saveUrlBrief = (u) => String(u || '').startsWith('data:') ? 'data:' + String(u).slice(5, 30) + '…' : String(u || '').slice(0, 160);
 
 /* 终端打印：发给多模态模型的数据（base64 截断） */
 function logSend(url, model, body, extra) {
@@ -73,7 +79,7 @@ router.post('/image/generate', async (req, res) => {
 
   try {
     if (!sf.apiKey) throw new Error('未配置 SF_API_KEY（硅基流动 API Key）');
-    logSend(url, sf.imageModel, body, '文生图：OpenMOSS-Team/MOSS-Image');
+    logSend(url, sf.imageModel, body, '文生图：' + sf.imageModel + '（可在 .env 中切换 OpenMOSS-Team/MOSS-Image）');
     const t0 = Date.now();
     const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), sf.timeout);
     let r;
@@ -92,18 +98,41 @@ router.post('/image/generate', async (req, res) => {
     const images = raw.images || [];
     if (!images.length) throw new Error('响应中没有 images 字段');
     const it = images[0] || {};
-    const imageUrl = it.url || (it.b64_json ? 'data:image/png;base64,' + it.b64_json : '');
-    if (!imageUrl) throw new Error('images[0] 中没有 url 或 b64_json');
+    const upstreamUrl = it.url || (it.b64_json ? 'data:image/png;base64,' + it.b64_json : '');
+    if (!upstreamUrl) throw new Error('images[0] 中没有 url 或 b64_json');
+
+    /* 远端图片下载到本地，返回稳定的 /generated/xxx.png，避免临时链接失效/加载慢 */
+    let imageUrl = upstreamUrl;
+    let localFile = null;
+    try {
+      let buf;
+      if (upstreamUrl.startsWith('data:')) {
+        buf = Buffer.from(upstreamUrl.split(',')[1] || '', 'base64');
+      } else {
+        const ir = await fetch(upstreamUrl, { signal: AbortSignal.timeout(30000) });
+        buf = Buffer.from(await ir.arrayBuffer());
+      }
+      if (buf && buf.length > 1000) {
+        const fname = 'gen-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.png';
+        fs.writeFileSync(path.join(GEN_DIR, fname), buf);
+        localFile = '/generated/' + fname;
+        imageUrl = localFile;
+        console.log('[IMAGE] 图片已保存到本地：' + localFile + '（' + buf.length + ' 字节）');
+      }
+    } catch (saveErr) {
+      console.warn('[IMAGE] 本地保存失败，使用上游链接：' + saveErr.message);
+    }
 
     ok(res, {
-      imageUrl, prompt, imageSize, steps, guidance, count: images.length,
+      imageUrl, localFile, upstreamUrl: saveUrlBrief(upstreamUrl), prompt, imageSize, steps, guidance, count: images.length,
       model: sf.imageModel, mode: sf.imageModel, usage: raw.usage || null,
       raw: { created: raw.created, imageCount: images.length, fields: Object.keys(it) }
     });
   } catch (e) {
     console.warn('[IMAGE] 生图模型不可用，自动降级：' + e.message);
     ok(res, {
-      imageUrl: demoImage(prompt, imageSize), prompt, imageSize, steps, guidance, count: 1,
+      imageUrl: demoImage(prompt, imageSize), localFile: null, upstreamUrl: null,
+      prompt, imageSize, steps, guidance, count: 1,
       model: sf.imageModel, mode: '本地演示生图（' + e.message.slice(0, 70) + '）',
       usage: null, raw: { demo: true }
     });

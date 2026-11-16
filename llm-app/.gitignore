@@ -1,6 +1,7 @@
 node_modules/
 backend/.env
 backend/data/
+frontend/generated/
 *.log
 .DS_Store
 Thumbs.db
