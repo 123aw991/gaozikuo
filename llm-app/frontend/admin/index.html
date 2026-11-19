@@ -20,8 +20,10 @@
     </div>
 
     <nav class="admin-nav">
+      <div class="admin-nav-caption">概览</div>
+      <button class="admin-nav-item active" data-view="dashboard"><span>📊</span>数据仪表盘</button>
       <div class="admin-nav-caption">实体管理</div>
-      <button class="admin-nav-item active" data-entity="users"><span>👥</span>用户管理</button>
+      <button class="admin-nav-item" data-entity="users"><span>👥</span>用户管理</button>
       <button class="admin-nav-item" data-entity="conversations"><span>💬</span>会话管理</button>
       <button class="admin-nav-item" data-entity="documents"><span>📚</span>知识库文档</button>
       <div class="admin-nav-caption">其他</div>
@@ -46,7 +48,41 @@
     </header>
 
     <div class="admin-content">
-      <section class="admin-panel">
+      <!-- 仪表盘（默认） -->
+      <section id="dashView">
+        <div class="dash-head">
+          <div><h2>数据仪表盘</h2><p>所有图表均由后端接口真实数据驱动 · 更新时间 <span id="dashTime">—</span></p></div>
+          <button class="btn" id="dashRefresh">🔄 刷新数据</button>
+        </div>
+        <div class="kpi-grid" id="kpiGrid"></div>
+        <div class="dash-grid">
+          <div class="dash-card wide">
+            <h3>📈 近 7 天消息趋势（折线图）</h3>
+            <div class="chart-box"><svg id="trendChart" viewBox="0 0 700 240" preserveAspectRatio="xMidYMid meet"></svg></div>
+          </div>
+          <div class="dash-card">
+            <h3>💬 消息角色分布（环形图）</h3>
+            <div class="chart-box"><svg id="roleChart" viewBox="0 0 260 240" preserveAspectRatio="xMidYMid meet"></svg></div>
+            <div id="roleLegend" class="chart-legend"></div>
+          </div>
+          <div class="dash-card">
+            <h3>📚 知识库文档状态（柱状图）</h3>
+            <div class="chart-box"><svg id="statusChart" viewBox="0 0 360 240" preserveAspectRatio="xMidYMid meet"></svg></div>
+          </div>
+          <div class="dash-card wide">
+            <h3>🔥 会话消息数 Top 5（横向条形图）</h3>
+            <div class="chart-box"><svg id="topChart" viewBox="0 0 700 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+          </div>
+          <div class="dash-card">
+            <h3>🗂 知识库文件格式分布（饼图）</h3>
+            <div class="chart-box"><svg id="extChart" viewBox="0 0 260 240" preserveAspectRatio="xMidYMid meet"></svg></div>
+            <div id="extLegend" class="chart-legend"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 实体管理 -->
+      <section class="admin-panel" id="entityView" hidden>
         <div class="admin-panel-head">
           <div>
             <h2 id="entityTitle">用户管理</h2>
@@ -91,6 +127,7 @@
 
 <script src="../js/api.js"></script>
 <script src="../js/ui.js"></script>
+<script src="js/dashboard.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

@@ -506,9 +506,101 @@ async function adminDelete(entity, id) {
   return true;
 }
 
+/* ---------------- 仪表盘聚合统计（真实数据） ---------------- */
+async function dashboardStats() {
+  const dayKey = (v) => {
+    if (!v) return '';
+    const s = String(v).replace('T', ' ');
+    return s.slice(0, 10);
+  };
+  const lastDays = (n) => {
+    const out = [];
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    for (let i = n - 1; i >= 0; i--) {
+      const x = new Date(d);
+      x.setDate(d.getDate() - i);
+      out.push(x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'));
+    }
+    return out;
+  };
+  const days = lastDays(7);
+
+  if (useMySQL) {
+    const one = async (sql, args) => (await pool.query(sql, args || []))[0][0];
+    const users = Number((await one('SELECT COUNT(*) AS n FROM users')).n);
+    const conversations = Number((await one('SELECT COUNT(*) AS n FROM conversations')).n);
+    const messages = Number((await one('SELECT COUNT(*) AS n FROM messages')).n);
+    const documents = Number((await one('SELECT COUNT(*) AS n FROM kb_documents')).n);
+    const chunks = Number((await one('SELECT COUNT(*) AS n FROM kb_chunks')).n);
+
+    const roleRows = await pool.query('SELECT role, COUNT(*) AS n FROM messages GROUP BY role');
+    const roleDist = { user: 0, assistant: 0, system: 0 };
+    roleRows[0].forEach((r) => { roleDist[r.role] = Number(r.n); });
+
+    const docStatusRows = await pool.query('SELECT status, COUNT(*) AS n FROM kb_documents GROUP BY status');
+    const docStatus = {};
+    docStatusRows[0].forEach((r) => { docStatus[r.status] = Number(r.n); });
+
+    const extRows = await pool.query("SELECT LOWER(ext) AS ext, COUNT(*) AS n FROM kb_documents GROUP BY LOWER(ext) ORDER BY n DESC");
+    const extDist = extRows[0].map((r) => ({ name: r.ext || 'unknown', value: Number(r.n) }));
+
+    const topRows = await pool.query(
+      'SELECT c.id, c.title, COUNT(m.id) AS n FROM conversations c LEFT JOIN messages m ON m.conversation_id = c.id GROUP BY c.id ORDER BY n DESC LIMIT 5'
+    );
+    const topConversations = topRows[0].map((r) => ({ id: r.id, title: r.title, count: Number(r.n) }));
+
+    const trendRows = await pool.query(
+      'SELECT DATE(created_at) AS d, COUNT(*) AS n FROM messages WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)'
+    );
+    const tmap = {};
+    trendRows[0].forEach((r) => { tmap[dayKey(r.d)] = Number(r.n); });
+    const trend = days.map((d) => ({ date: d, count: tmap[d] || 0 }));
+
+    return {
+      totals: { users, conversations, messages, documents, chunks },
+      roleDist, docStatus, extDist, topConversations, trend,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  const users = mem.users.length;
+  const conversations = mem.conversations.length;
+  const messages = mem.messages.length;
+  const documents = mem.documents.length;
+  const chunks = mem.chunks.length;
+
+  const roleDist = { user: 0, assistant: 0, system: 0 };
+  mem.messages.forEach((m) => { if (roleDist[m.role] !== undefined) roleDist[m.role]++; });
+
+  const docStatus = {};
+  mem.documents.forEach((d) => { docStatus[d.status || 'unknown'] = (docStatus[d.status || 'unknown'] || 0) + 1; });
+
+  const extMap = {};
+  mem.documents.forEach((d) => { const k = String(d.ext || 'unknown').toLowerCase(); extMap[k] = (extMap[k] || 0) + 1; });
+  const extDist = Object.entries(extMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+  const topConversations = mem.conversations.map((c) => ({
+    id: c.id,
+    title: c.title,
+    count: mem.messages.filter((m) => m.conversation_id === c.id).length
+  })).sort((a, b) => b.count - a.count).slice(0, 5);
+
+  const tmap = {};
+  mem.messages.forEach((m) => { const k = dayKey(m.created_at); if (k) tmap[k] = (tmap[k] || 0) + 1; });
+  const trend = days.map((d) => ({ date: d, count: tmap[d] || 0 }));
+
+  return {
+    totals: { users, conversations, messages, documents, chunks },
+    roleDist, docStatus, extDist, topConversations, trend,
+    generatedAt: new Date().toISOString()
+  };
+}
+
 module.exports = {
   init,
   isMySQL: () => useMySQL,
+  dashboardStats,
   findUser,
   findUserById,
   createUser,

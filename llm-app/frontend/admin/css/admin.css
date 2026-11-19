@@ -99,7 +99,34 @@
 .ui-detail-k { min-width: 92px; color: #7d94b8; font-size: 11.5px; }
 .ui-detail-v { flex: 1; color: #dbe8fb; font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 140px; overflow-y: auto; }
 
+/* ============ 仪表盘 ============ */
+.dash-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.dash-head h2 { font-size: 17px; margin-bottom: 5px; }
+.dash-head p { font-size: 11.5px; color: var(--muted); }
+.dash-head .btn { margin-left: auto; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-card { position: relative; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 16px 14px; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--c); }
+.kpi-icon { font-size: 20px; margin-bottom: 8px; }
+.kpi-value { font-family: Consolas, monospace; font-size: 26px; font-weight: 700; color: var(--c); line-height: 1.1; }
+.kpi-label { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+.dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.dash-card { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 15px 16px; min-width: 0; }
+.dash-card.wide { grid-column: 1 / -1; }
+.dash-card h3 { font-size: 12.5px; color: #cfe0f8; margin-bottom: 12px; }
+.chart-box { width: 100%; display: grid; place-items: center; min-height: 200px; }
+.chart-box svg { width: 100%; height: auto; max-height: 260px; }
+.chart-legend { display: flex; flex-direction: column; gap: 7px; max-width: 230px; margin: 8px auto 0; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #cfe0f8; }
+.legend-item i { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.legend-item b { margin-left: auto; font-family: Consolas, monospace; }
+.legend-item em { font-style: normal; color: var(--muted); font-family: Consolas, monospace; min-width: 46px; text-align: right; }
+
+@media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } .dash-grid { grid-template-columns: 1fr; } .dash-card.wide { grid-column: auto; } }
 @media (max-width: 900px) {
   .admin-layout { grid-template-columns: 1fr; }
   .admin-side { display: none; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }

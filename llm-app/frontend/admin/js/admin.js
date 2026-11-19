@@ -185,23 +185,40 @@
     if (res.code === 0) { if (page > 1 && total - 1 <= (page - 1) * pageSize) page--; load(); }
   }
 
+  /* ---------- 视图切换 ---------- */
+  function showDashboard() {
+    document.querySelectorAll('.admin-nav-item').forEach((x) => x.classList.remove('active'));
+    document.querySelector('.admin-nav-item[data-view="dashboard"]').classList.add('active');
+    $('#dashView').hidden = false;
+    $('#entityView').hidden = true;
+    $('#crumbName').textContent = '数据仪表盘';
+    if (window.Dashboard) Dashboard.load();
+  }
+  function showEntity(btn) {
+    document.querySelectorAll('.admin-nav-item').forEach((x) => x.classList.remove('active'));
+    btn.classList.add('active');
+    $('#dashView').hidden = true;
+    $('#entityView').hidden = false;
+    entity = btn.dataset.entity;
+    page = 1; keyword = '';
+    $('#searchInput').value = '';
+    const meta = ENTITIES[entity];
+    $('#entityTitle').textContent = meta.label + '管理';
+    $('#entityDesc').textContent = meta.desc;
+    $('#crumbName').textContent = meta.label + '管理';
+    $('#addBtn').textContent = '+ 新增' + meta.label;
+    renderHead();
+    load();
+  }
+
   /* ---------- 事件 ---------- */
   document.querySelectorAll('.admin-nav-item[data-entity]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.admin-nav-item').forEach((x) => x.classList.remove('active'));
-      btn.classList.add('active');
-      entity = btn.dataset.entity;
-      page = 1; keyword = '';
-      $('#searchInput').value = '';
-      const meta = ENTITIES[entity];
-      $('#entityTitle').textContent = meta.label + '管理';
-      $('#entityDesc').textContent = meta.desc;
-      $('#crumbName').textContent = meta.label + '管理';
-      $('#addBtn').textContent = '+ 新增' + meta.label;
-      renderHead();
-      load();
-    });
+    btn.addEventListener('click', () => showEntity(btn));
   });
+  const dashBtn = document.querySelector('.admin-nav-item[data-view="dashboard"]');
+  if (dashBtn) dashBtn.addEventListener('click', showDashboard);
+  const refreshBtn = document.getElementById('dashRefresh');
+  if (refreshBtn) refreshBtn.addEventListener('click', () => { Dashboard.load(); UI.alert('数据已刷新', '仪表盘'); });
 
   $('#addBtn').addEventListener('click', showAdd);
   $('#searchBtn').addEventListener('click', () => { keyword = $('#searchInput').value.trim(); page = 1; load(); });
@@ -230,7 +247,7 @@
     if (me.code === 0) {
       $('#adminName').textContent = me.data.username;
       renderHead();
-      load();
+      showDashboard(); // 默认进入仪表盘
     }
   })();
 })();

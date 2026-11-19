@@ -96,6 +96,18 @@ router.use(adminRequired);
 /* 实体元信息（前端动态渲染表单） */
 router.get('/entities', (req, res) => ok(res, ENTITIES));
 
+/* 仪表盘聚合数据（全部来自 store 真实记录） */
+router.get('/dashboard', async (req, res) => {
+  try {
+    const data = await store.dashboardStats();
+    console.log('[ADMIN] 仪表盘统计：' + JSON.stringify(data.totals));
+    ok(res, data);
+  } catch (e) {
+    console.error('[ADMIN] 仪表盘统计失败：', e.message);
+    fail(res, 5007, '统计失败：' + e.message);
+  }
+});
+
 /* 列表：搜索 + 分页 */
 router.get('/:name', async (req, res) => {
   const name = req.params.name;

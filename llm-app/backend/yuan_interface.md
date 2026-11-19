@@ -25,7 +25,23 @@
 | 修改 | `PUT /api/admin/:name/:id` | 传需要修改的字段；用户密码留空则不改 |
 | 删除 | `DELETE /api/admin/:name/:id` | 会话/文档级联删除关联数据 |
 
-### 0000.3 鉴权拦截
+### 0000.3 数据仪表盘
+`GET /api/admin/dashboard`（需管理 Token）→ 全部字段由数据库/JSON 真实记录实时聚合：
+```json
+{
+  "totals": { "users": 5, "conversations": 3, "messages": 7, "documents": 2, "chunks": 8 },
+  "roleDist": { "user": 4, "assistant": 3, "system": 0 },
+  "docStatus": { "ready": 2, "parsing": 0, "error": 0 },
+  "extDist": [ { "name": "txt", "value": 1 }, { "name": "md", "value": 1 } ],
+  "topConversations": [ { "id": 2, "title": "…", "count": 4 } ],
+  "trend": [ { "date": "2026-11-19", "count": 7 } ],
+  "generatedAt": "2026-11-19T…"
+}
+```
+- `trend` 为近 7 天消息数（如实反映，无数据为 0）；`roleDist` 合计 = `totals.messages`；`docStatus` 合计 = `totals.documents`。
+- 前端仪表盘用该接口数据绘制指标卡与 5 种 SVG 图表，无静态数据。
+
+### 0000.4 鉴权拦截
 所有管理接口（含列表、详情、增删改、`/entities`）均经 `adminRequired` 中间件；未登录/伪造 Token 返回：
 ```json
 { "code": 401, "msg": "未登录或登录已失效，请先登录管理后台", "data": null }
