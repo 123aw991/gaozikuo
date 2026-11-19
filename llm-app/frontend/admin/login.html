@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>管理员登录 · LLM 应用后台管理系统</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="stylesheet" href="../css/auth.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="auth-body">
+<div class="auth-bg"><span></span><span></span><span></span></div>
+
+<main class="auth-card admin-login-card">
+  <div class="auth-head">
+    <div class="auth-logo admin-logo">⚙</div>
+    <h1>管理后台登录</h1>
+    <p>LLM 应用设计 · 知识库问答系统 管理中心</p>
+  </div>
+
+  <form id="adminLoginForm" class="auth-form" novalidate>
+    <div class="form-item">
+      <label for="username">管理员用户名</label>
+      <div class="input-wrap"><span class="ico">👤</span><input id="username" name="username" type="text" placeholder="请输入管理员用户名" autocomplete="username" value="admin" /></div>
+    </div>
+    <div class="form-item">
+      <label for="password">管理员密码</label>
+      <div class="input-wrap"><span class="ico">🔒</span><input id="password" name="password" type="password" placeholder="请输入管理员密码" autocomplete="current-password" /><button type="button" class="eye" id="togglePwd">显示</button></div>
+    </div>
+    <div class="err-msg" id="errMsg"></div>
+    <button type="submit" class="btn primary auth-submit" id="submitBtn">登录管理后台</button>
+  </form>
+
+  <div class="admin-login-hint">
+    默认管理员：<b>admin</b> / <b>admin123</b><br/>
+    提示信息均由自封装组件显示（无浏览器默认弹窗）
+  </div>
+  <div class="auth-foot" style="justify-content:center">
+    <a href="../index.html">← 返回前台门户</a>
+  </div>
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/ui.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>

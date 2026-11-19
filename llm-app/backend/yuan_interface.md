@@ -5,6 +5,35 @@
 
 ---
 
+## 0000. 后台管理 `/api/admin`
+
+> 管理员账号体系独立于前台用户。默认 `admin / admin123`（首次登录自动写入）。除 `/auth/login` 外，所有接口必须携带 `Authorization: Bearer <adminToken>`，否则统一返回 `code=401`。
+
+### 0000.1 管理员登录
+`POST /api/admin/auth/login`  body: `{ "username": "admin", "password": "admin123" }` → `{ token, admin: { id, username } }`
+
+`GET /api/admin/auth/me` → `{ id, username, role: 'admin' }`（需鉴权）
+
+### 0000.2 通用实体接口
+实体名 `name` 取值：`users`（用户）、`conversations`（会话）、`documents`（知识库文档）。
+
+| 操作 | 方法 / 路径 | 说明 |
+|---|---|---|
+| 列表 | `GET /api/admin/:name?keyword=&page=&pageSize=` | 搜索 + 分页，返回 `{ items, total, page, pageSize }` |
+| 详情 | `GET /api/admin/:name/:id` | 会话附消息列表，文档附分块内容 |
+| 新增 | `POST /api/admin/:name` | users: username/email/password；conversations: title；documents: filename/ext/chars/status |
+| 修改 | `PUT /api/admin/:name/:id` | 传需要修改的字段；用户密码留空则不改 |
+| 删除 | `DELETE /api/admin/:name/:id` | 会话/文档级联删除关联数据 |
+
+### 0000.3 鉴权拦截
+所有管理接口（含列表、详情、增删改、`/entities`）均经 `adminRequired` 中间件；未登录/伪造 Token 返回：
+```json
+{ "code": 401, "msg": "未登录或登录已失效，请先登录管理后台", "data": null }
+```
+前台用户 Token 因签名密钥不同（`:admin` 后缀）无法通过后台鉴权。
+
+---
+
 ## 000. 登录与注册 `/api/auth`
 
 > 密码用 Node `crypto.scryptSync` 加盐哈希（不存明文）；Token 为 HMAC-SHA256 签名（`Authorization: Bearer <token>`），有效期由 `AUTH_TOKEN_HOURS` 配置（默认 72h）。

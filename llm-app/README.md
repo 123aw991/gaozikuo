@@ -11,6 +11,7 @@
 | 模块 | 说明 |
 |---|---|
 | 登录 / 注册 | 用户注册与登录（scrypt 加盐哈希、HMAC 签名 Token、邮箱/用户名校验），门户显示登录状态，支持退出；MySQL/JSON 双存储 |
+| **后台管理系统** | 独立管理员登录（默认 admin/admin123）；左右布局含项目名与 Logo；管理**用户/会话/知识库文档 3 个实体**，各支持增/删/改/查（列表）+ 搜索 + 分页 + 详情；未登录访问管理接口一律 401 拦截；**全部提示用自封装 Modal 组件（无原生 alert/confirm/prompt）** |
 | 智能问答 | 基于本地知识库的流式问答；会话管理（新建/重命名/删除/历史加载）；RAG 检索开关；引用来源溯源 |
 | **AI 生图与语音识别** | 文生图默认 `Kwai-Kolors/Kolors`（硅基流动 `/images/generations`，约 5 秒出图；可在 `.env` 切 `OpenMOSS-Team/MOSS-Image`）；语音识别用 `FunAudioLLM/SenseVoiceSmall`（`/audio/transcriptions`，Qwen 多模态可切换）+ 浏览器实时录音；转写文本可整理摘要/关键词/意图；生成的图片自动保存到本地 `/generated/` |
 | **商业评论情感分类** | 上传 Excel（.xlsx/.xls），LLM 逐条判断好评/中评/差评；前端饼状图展示分布、精选评论、完整明细；大模型收发报文在服务端终端与浏览器控制台打印；附 3 份各 20 条的模拟数据 |
@@ -35,7 +36,8 @@ llm-app/
 │  │  ├─ kb.js               # /api/kb 文档上传/列表/删除/分块/检索/统计
 │  │  ├─ sentiment.js        # /api/sentiment Excel 解析 + LLM 情感分类 + 兜底降级
 │  │  ├─ recognition.js      # /api/recognition 生图（OpenMOSS）/ 语音识别（SenseVoice）/ 文本整理
-│  │  └─ auth.js             # /api/auth 注册/登录/当前用户/登出（scrypt + HMAC Token）
+│  │  ├─ auth.js             # /api/auth 注册/登录/当前用户/登出（scrypt + HMAC Token）
+│  │  └─ admin.js            # /api/admin 后台管理：鉴权拦截 + 3 实体 CRUD/搜索/分页/详情
 │  ├─ services/
 │  │  ├─ store.js            # 存储抽象：MySQL 或本地 JSON（运行时切换）
 │  │  ├─ parser.js           # 文件解析：txt/md/pdf/doc/docx/ppt/pptx/csv/json
@@ -50,12 +52,28 @@ llm-app/
 └─ frontend/                 # 原生前端（无第三方依赖）
    ├─ index.html             # 门户：项目说明、架构、服务状态、登录状态栏
    ├─ login.html + register.html + js/auth.js + css/auth.css  # 登录 / 注册页
+   ├─ admin/                # 后台管理系统
+   │  ├─ login.html         # 管理员登录页（独立账号体系）
+   │  ├─ index.html         # 管理主页（左右布局 + Logo + 项目名）
+   │  ├─ css/admin.css      # 后台样式 + 自封装 Modal 组件样式
+   │  └─ js/{login,admin}.js  # 登录逻辑 / 三实体管理逻辑
    ├─ chat.html + js/chat.js  # 智能问答页
    ├─ kb.html + js/kb.js      # 知识库管理页
    ├─ sentiment.html + js/sentiment.js  # 商业评论情感分类页（饼图 + 精选评论）
+   ├─ recognition.html + js/recognition.js  # AI 生图与语音识别页
    ├─ css/style.css          # 统一深色主题
-   └─ js/{api,md}.js         # 请求封装（控制台日志）/ 轻量 Markdown 渲染
+   └─ js/{api,md,ui,auth}.js # 请求封装/控制台日志、Markdown、自封装 UI 组件（替代原生弹窗）、登录注册
 ```
+
+### 后台管理系统使用
+
+浏览器打开 `http://localhost:8325/admin/login.html`，输入管理员用户名 `admin`、密码 `admin123`（首次登录自动创建）。进入后为左右布局：左侧含项目名称、Logo 与 3 个实体导航，右侧为列表/搜索/分页/新增操作。
+
+- **用户管理**：新增（用户名/邮箱/密码）、编辑、删除、搜索（用户名/邮箱）、分页、详情。
+- **会话管理**：新增（标题）、编辑、删除、搜索（标题）、分页，详情含消息列表。
+- **知识库文档管理**：新增（文件名/格式/字符数/状态）、编辑、删除、搜索（文件名/格式）、分页，详情含分块内容。
+- **鉴权**：所有 `/api/admin/*`（除登录）均需管理员 Token；未登录返回 401，前端自动跳转登录页。管理员 Token 与普通用户 Token 完全隔离。
+- **提示组件**：`frontend/js/ui.js` 自封装 `UI.alert / UI.confirm / UI.prompt / UI.form / UI.detail`，全项目**不使用**浏览器默认 `alert/confirm/prompt`。
 
 ### 情感分类使用
 

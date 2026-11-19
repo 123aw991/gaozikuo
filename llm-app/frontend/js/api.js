@@ -38,16 +38,21 @@ const API = (function () {
   const getUser = () => { try { return JSON.parse(localStorage.getItem('llmapp_user') || 'null'); } catch (e) { return null; } };
   const setUser = (u) => { try { u ? localStorage.setItem('llmapp_user', JSON.stringify(u)) : localStorage.removeItem('llmapp_user'); } catch (e) { /* ignore */ } };
 
-  function authHeaders(base) {
+  /* 管理员 Token（与普通用户隔离，后台接口专用） */
+  const ADMIN_KEY = 'llmapp_admin_token';
+  const getAdminToken = () => { try { return localStorage.getItem(ADMIN_KEY) || ''; } catch (e) { return ''; } };
+  const setAdminToken = (t) => { try { t ? localStorage.setItem(ADMIN_KEY, t) : localStorage.removeItem(ADMIN_KEY); } catch (e) { /* ignore */ } };
+
+  function authHeaders(base, useAdmin) {
     const h = Object.assign({}, base || {});
-    const t = getToken();
+    const t = useAdmin ? getAdminToken() : getToken();
     if (t) h.Authorization = 'Bearer ' + t;
     return h;
   }
 
   async function json(method, path, obj) {
     const url = BASE + path;
-    const headers = authHeaders({ 'Content-Type': 'application/json' });
+    const headers = authHeaders({ 'Content-Type': 'application/json' }, path.indexOf('/api/admin/') === 0);
     logReq(method, url, headers, obj);
     const r = await fetch(url, { method, headers, body: obj ? JSON.stringify(obj) : undefined });
     const data = await r.json().catch(() => ({}));
@@ -127,5 +132,5 @@ const API = (function () {
     handlers.onClose && handlers.onClose();
   }
 
-  return { BASE, json, upload, sse, getToken, setToken, getUser, setUser };
+  return { BASE, json, upload, sse, getToken, setToken, getUser, setUser, getAdminToken, setAdminToken };
 })();

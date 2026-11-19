@@ -15,6 +15,14 @@
 
 ## 2. 表结构
 
+### 2.00 admins（管理员表）
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | BIGINT PK | 管理员 ID |
+| username | VARCHAR(50) UNIQUE | 管理员用户名（默认 admin） |
+| password_hash | VARCHAR(255) | scrypt 加盐哈希（默认密码 admin123） |
+| created_at | DATETIME | 创建时间 |
+
 ### 2.0 users（用户表）
 | 字段 | 类型 | 说明 |
 |---|---|---|

@@ -14,7 +14,10 @@ const file = path.join(config.dataDir, 'store.json');
 let mem = emptyState();
 
 function emptyState() {
-  return { seq: { conv: 0, msg: 0, doc: 0, chunk: 0, user: 0 }, conversations: [], messages: [], documents: [], chunks: [], users: [] };
+  return {
+    seq: { conv: 0, msg: 0, doc: 0, chunk: 0, user: 0, admin: 0 },
+    conversations: [], messages: [], documents: [], chunks: [], users: [], admins: []
+  };
 }
 
 function loadJson() {
@@ -23,8 +26,10 @@ function loadJson() {
     if (fs.existsSync(file)) {
       mem = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (!mem.users) mem.users = [];
+      if (!mem.admins) mem.admins = [];
       if (!mem.seq) mem.seq = {};
       if (!mem.seq.user) mem.seq.user = 0;
+      if (!mem.seq.admin) mem.seq.admin = 0;
     }
   } catch (e) {
     console.warn('[STORE] 读取本地 JSON 失败，使用空数据：', e.message);
@@ -288,6 +293,219 @@ async function updateLastLogin(id) {
   if (u) { u.last_login_at = now(); saveJson(); }
 }
 
+/* ---------------- 管理员 ---------------- */
+async function findAdmin(username) {
+  if (useMySQL) {
+    const [rows] = await pool.query('SELECT * FROM admins WHERE username = ? LIMIT 1', [username]);
+    return rows[0] || null;
+  }
+  return mem.admins.find((a) => a.username === username) || null;
+}
+async function findAdminById(id) {
+  if (useMySQL) {
+    const [rows] = await pool.query('SELECT id, username, created_at FROM admins WHERE id = ?', [id]);
+    return rows[0] || null;
+  }
+  return mem.admins.find((a) => a.id === Number(id)) || null;
+}
+async function ensureDefaultAdmin(passwordHash) {
+  const exists = await findAdmin('admin');
+  if (exists) return exists;
+  if (useMySQL) {
+    await pool.query('INSERT INTO admins (username, password_hash) VALUES (?, ?)', ['admin', passwordHash]);
+    return findAdmin('admin');
+  }
+  const rec = { id: nextId('admin'), username: 'admin', password_hash: passwordHash, created_at: now() };
+  mem.admins.push(rec);
+  saveJson();
+  return rec;
+}
+
+/* ---------------- 后台管理：通用分页查询 ---------------- */
+/* entity: 'users' | 'conversations' | 'documents'；keyword 模糊匹配主要字段 */
+async function adminList(entity, keyword, page, pageSize) {
+  const kw = String(keyword || '').trim().toLowerCase();
+  const p = Math.max(1, Number(page) || 1);
+  const size = Math.min(100, Math.max(1, Number(pageSize) || 10));
+
+  let rows;
+  if (useMySQL) {
+    const table = { users: 'users', conversations: 'conversations', documents: 'kb_documents' }[entity];
+    const cols = {
+      users: 'id, username, email, created_at, last_login_at',
+      conversations: 'id, title, created_at, updated_at',
+      documents: 'id, filename, ext, size, chars, chunk_count, status, created_at'
+    }[entity];
+    const searchCols = {
+      users: ['username', 'email'],
+      conversations: ['title'],
+      documents: ['filename', 'ext']
+    }[entity];
+    let where = '', args = [];
+    if (kw) {
+      where = ' WHERE ' + searchCols.map((c) => 'LOWER(' + c + ') LIKE ?').join(' OR ');
+      args = searchCols.map(() => '%' + kw + '%');
+    }
+    const [cnt] = await pool.query('SELECT COUNT(*) AS total FROM ' + table + where, args);
+    const [items] = await pool.query('SELECT ' + cols + ' FROM ' + table + where + ' ORDER BY id DESC LIMIT ? OFFSET ?', args.concat([size, (p - 1) * size]));
+    return { items, total: Number(cnt[0].total), page: p, pageSize: size };
+  }
+
+  let source;
+  if (entity === 'users') source = mem.users.map((u) => ({ id: u.id, username: u.username, email: u.email, created_at: u.created_at, last_login_at: u.last_login_at || null }));
+  else if (entity === 'conversations') source = mem.conversations.map((c) => ({ id: c.id, title: c.title, created_at: c.created_at, updated_at: c.updated_at }));
+  else source = mem.documents.slice();
+
+  const fields = entity === 'users' ? ['username', 'email'] : entity === 'conversations' ? ['title'] : ['filename', 'ext'];
+  if (kw) source = source.filter((r) => fields.some((f) => String(r[f] || '').toLowerCase().includes(kw)));
+  source.sort((a, b) => b.id - a.id);
+  const total = source.length;
+  return { items: source.slice((p - 1) * size, p * size), total, page: p, pageSize: size };
+}
+
+async function adminDetail(entity, id) {
+  if (useMySQL) {
+    const table = { users: 'users', conversations: 'conversations', documents: 'kb_documents' }[entity];
+    const cols = {
+      users: 'id, username, email, created_at, last_login_at',
+      conversations: 'id, title, created_at, updated_at',
+      documents: 'id, filename, ext, size, chars, chunk_count, status, created_at'
+    }[entity];
+    const [rows] = await pool.query('SELECT ' + cols + ' FROM ' + table + ' WHERE id = ?', [id]);
+    if (!rows.length) return null;
+    const row = rows[0];
+    if (entity === 'conversations') {
+      const [msgs] = await pool.query('SELECT id, role, content, created_at FROM messages WHERE conversation_id = ? ORDER BY id ASC LIMIT 50', [id]);
+      const [cnt] = await pool.query('SELECT COUNT(*) AS total FROM messages WHERE conversation_id = ?', [id]);
+      row.messages = msgs;
+      row.message_count = Number(cnt[0].total);
+    } else if (entity === 'documents') {
+      const [chunks] = await pool.query('SELECT id, seq, content, tokens FROM kb_chunks WHERE doc_id = ? ORDER BY seq ASC LIMIT 50', [id]);
+      row.chunks = chunks;
+    }
+    return row;
+  }
+  const idn = Number(id);
+  if (entity === 'users') {
+    const u = mem.users.find((x) => x.id === idn);
+    return u ? { id: u.id, username: u.username, email: u.email, created_at: u.created_at, last_login_at: u.last_login_at || null } : null;
+  }
+  if (entity === 'conversations') {
+    const c = mem.conversations.find((x) => x.id === idn);
+    if (!c) return null;
+    const messages = mem.messages.filter((m) => m.conversation_id === idn);
+    return { ...c, messages: messages.slice(0, 50), message_count: messages.length };
+  }
+  const d = mem.documents.find((x) => x.id === idn);
+  if (!d) return null;
+  return { ...d, chunks: mem.chunks.filter((c) => c.doc_id === idn).slice(0, 50) };
+}
+
+async function adminCreate(entity, data) {
+  if (useMySQL) {
+    if (entity === 'users') {
+      const crypto = require('crypto');
+      const pwd = String(data.password || '123456');
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hash = 'scrypt$' + salt + '$' + crypto.scryptSync(pwd, salt, 64).toString('hex');
+      const [r] = await pool.query('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [data.username, data.email, hash]);
+      return { id: r.insertId, username: data.username, email: data.email };
+    }
+    if (entity === 'conversations') {
+      const [r] = await pool.query('INSERT INTO conversations (title) VALUES (?)', [data.title]);
+      return { id: r.insertId, title: data.title };
+    }
+    const [r] = await pool.query('INSERT INTO kb_documents (filename, ext, size, chars, chunk_count, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [data.filename, data.ext || '', Number(data.size) || 0, Number(data.chars) || 0, Number(data.chunk_count) || 0, data.status || 'ready']);
+    return { id: r.insertId, filename: data.filename };
+  }
+  if (entity === 'users') {
+    const crypto = require('crypto');
+    const pwd = String(data.password || '123456');
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = 'scrypt$' + salt + '$' + crypto.scryptSync(pwd, salt, 64).toString('hex');
+    const rec = { id: nextId('user'), username: data.username, email: data.email, password_hash: hash, created_at: now(), last_login_at: null };
+    mem.users.push(rec);
+    saveJson();
+    return { id: rec.id, username: rec.username, email: rec.email };
+  }
+  if (entity === 'conversations') {
+    const rec = { id: nextId('conv'), title: data.title, created_at: now(), updated_at: now() };
+    mem.conversations.push(rec);
+    saveJson();
+    return { id: rec.id, title: rec.title };
+  }
+  const rec = {
+    id: nextId('doc'), filename: data.filename, ext: data.ext || '', size: Number(data.size) || 0,
+    chars: Number(data.chars) || 0, chunk_count: Number(data.chunk_count) || 0, status: data.status || 'ready', created_at: now()
+  };
+  mem.documents.push(rec);
+  saveJson();
+  return { id: rec.id, filename: rec.filename };
+}
+
+async function adminUpdate(entity, id, data) {
+  if (useMySQL) {
+    const table = { users: 'users', conversations: 'conversations', documents: 'kb_documents' }[entity];
+    const sets = [];
+    const args = [];
+    const allowed = {
+      users: ['username', 'email'],
+      conversations: ['title'],
+      documents: ['filename', 'ext', 'chars', 'status']
+    }[entity];
+    allowed.forEach((f) => {
+      if (data[f] !== undefined) { sets.push(f + ' = ?'); args.push(data[f]); }
+    });
+    if (entity === 'users' && data.password) {
+      const crypto = require('crypto');
+      const salt = crypto.randomBytes(16).toString('hex');
+      sets.push('password_hash = ?');
+      args.push('scrypt$' + salt + '$' + crypto.scryptSync(String(data.password), salt, 64).toString('hex'));
+    }
+    if (!sets.length) return false;
+    args.push(id);
+    await pool.query('UPDATE ' + table + ' SET ' + sets.join(', ') + ' WHERE id = ?', args);
+    return true;
+  }
+  const idn = Number(id);
+  const rec = (entity === 'users' ? mem.users : entity === 'conversations' ? mem.conversations : mem.documents).find((x) => x.id === idn);
+  if (!rec) return false;
+  const allowed = {
+    users: ['username', 'email'],
+    conversations: ['title'],
+    documents: ['filename', 'ext', 'chars', 'status']
+  }[entity];
+  allowed.forEach((f) => { if (data[f] !== undefined) rec[f] = data[f]; });
+  if (entity === 'users' && data.password) {
+    const crypto = require('crypto');
+    const salt = crypto.randomBytes(16).toString('hex');
+    rec.password_hash = 'scrypt$' + salt + '$' + crypto.scryptSync(String(data.password), salt, 64).toString('hex');
+  }
+  saveJson();
+  return true;
+}
+
+async function adminDelete(entity, id) {
+  if (useMySQL) {
+    if (entity === 'users') await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    else if (entity === 'conversations') await pool.query('DELETE FROM conversations WHERE id = ?', [id]);
+    else await pool.query('DELETE FROM kb_documents WHERE id = ?', [id]);
+    return true;
+  }
+  const idn = Number(id);
+  if (entity === 'users') mem.users = mem.users.filter((x) => x.id !== idn);
+  else if (entity === 'conversations') {
+    mem.conversations = mem.conversations.filter((x) => x.id !== idn);
+    mem.messages = mem.messages.filter((m) => m.conversation_id !== idn);
+  } else {
+    mem.documents = mem.documents.filter((x) => x.id !== idn);
+    mem.chunks = mem.chunks.filter((c) => c.doc_id !== idn);
+  }
+  saveJson();
+  return true;
+}
+
 module.exports = {
   init,
   isMySQL: () => useMySQL,
@@ -305,5 +523,13 @@ module.exports = {
   addDocument,
   deleteDocument,
   listAllChunks,
-  getChunksByDoc
+  getChunksByDoc,
+  findAdmin,
+  findAdminById,
+  ensureDefaultAdmin,
+  adminList,
+  adminDetail,
+  adminCreate,
+  adminUpdate,
+  adminDelete
 };

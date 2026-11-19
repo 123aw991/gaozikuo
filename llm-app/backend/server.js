@@ -14,6 +14,7 @@ const kbRoutes = require('./routes/kb');
 const sentimentRoutes = require('./routes/sentiment');
 const recognitionRoutes = require('./routes/recognition');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 
 async function main() {
   await store.init();
@@ -54,6 +55,7 @@ async function main() {
   app.use('/api/sentiment', sentimentRoutes);
   app.use('/api/recognition', recognitionRoutes);
   app.use('/api/auth', authRoutes.router);
+  app.use('/api/admin', adminRoutes.router);
 
   app.use((req, res) => res.status(404).json({ code: 4040, msg: 'Not Found', data: null }));
 

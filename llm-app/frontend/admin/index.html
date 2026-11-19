@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>后台管理系统 · LLM 应用设计</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <!-- 左侧：Logo + 项目名称 + 导航 -->
+  <aside class="admin-side">
+    <div class="admin-brand">
+      <div class="admin-brand-logo">⌘</div>
+      <div class="admin-brand-text">
+        <b>LLM 应用设计</b>
+        <span>知识库问答系统 · 管理中心</span>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <div class="admin-nav-caption">实体管理</div>
+      <button class="admin-nav-item active" data-entity="users"><span>👥</span>用户管理</button>
+      <button class="admin-nav-item" data-entity="conversations"><span>💬</span>会话管理</button>
+      <button class="admin-nav-item" data-entity="documents"><span>📚</span>知识库文档</button>
+      <div class="admin-nav-caption">其他</div>
+      <a class="admin-nav-item" href="../index.html"><span>🏠</span>返回前台</a>
+    </nav>
+
+    <div class="admin-side-foot">
+      <div class="admin-avatar">⚙</div>
+      <div class="admin-user-info"><b id="adminName">管理员</b><span>系统管理员</span></div>
+      <button class="admin-logout" id="logoutBtn" title="退出登录">退出</button>
+    </div>
+  </aside>
+
+  <!-- 右侧：主内容 -->
+  <main class="admin-main">
+    <header class="admin-topbar">
+      <div class="admin-crumb">后台管理 / <span id="crumbName">用户管理</span></div>
+      <div class="admin-top-right">
+        <span class="admin-badge">ADMIN</span>
+        <span id="adminClock"></span>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <section class="admin-panel">
+        <div class="admin-panel-head">
+          <div>
+            <h2 id="entityTitle">用户管理</h2>
+            <p id="entityDesc">管理系统注册用户，支持新增、编辑、删除、搜索与分页</p>
+          </div>
+          <button class="btn primary" id="addBtn">+ 新增用户</button>
+        </div>
+
+        <div class="admin-toolbar">
+          <div class="admin-search">
+            <input id="searchInput" placeholder="搜索关键词，回车或点击搜索" />
+            <button class="btn" id="searchBtn">🔍 搜索</button>
+            <button class="btn" id="resetBtn">重置</button>
+          </div>
+          <div class="admin-page-size">
+            每页
+            <select id="pageSize"><option>5</option><option selected>10</option><option>20</option><option>50</option></select>
+            条
+          </div>
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+          <div class="admin-empty" id="emptyRow" hidden>暂无数据</div>
+        </div>
+
+        <div class="admin-pager">
+          <span id="pageInfo">共 0 条</span>
+          <div class="admin-pager-btns">
+            <button class="btn" id="prevBtn">上一页</button>
+            <span id="pageNum">1 / 1</span>
+            <button class="btn" id="nextBtn">下一页</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/ui.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
