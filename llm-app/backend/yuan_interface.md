@@ -5,6 +5,27 @@
 
 ---
 
+## 000. 登录与注册 `/api/auth`
+
+> 密码用 Node `crypto.scryptSync` 加盐哈希（不存明文）；Token 为 HMAC-SHA256 签名（`Authorization: Bearer <token>`），有效期由 `AUTH_TOKEN_HOURS` 配置（默认 72h）。
+
+### 000.1 注册
+`POST /api/auth/register`  body: `{ "username": "张三", "email": "a@b.com", "password": "abc123" }`
+- 校验：用户名 2-20 位（字母/数字/下划线/中文）、邮箱格式、密码 6-64 位、用户名与邮箱唯一。
+- 响应 `data`: `{ user: { id, username, email } }`
+
+### 000.2 登录
+`POST /api/auth/login`  body: `{ "account": "用户名或邮箱", "password": "abc123" }`
+- 响应 `data`: `{ token, user: { id, username, email } }`
+
+### 000.3 当前用户
+`GET /api/auth/me`  header: `Authorization: Bearer <token>` → `{ id, username, email, last_login_at }`
+
+### 000.4 登出
+`POST /api/auth/logout`  header: `Authorization: Bearer <token>` → `{ ok: true }`（前端清除 localStorage 中的 token/user）
+
+---
+
 ## 00. AI 生图与语音识别 `/api/recognition`
 
 > 多模态能力统一走硅基流动 `https://api.siliconflow.cn/v1`。请求/响应报文在服务端终端打印（base64 自动截断）。

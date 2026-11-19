@@ -14,13 +14,18 @@ const file = path.join(config.dataDir, 'store.json');
 let mem = emptyState();
 
 function emptyState() {
-  return { seq: { conv: 0, msg: 0, doc: 0, chunk: 0 }, conversations: [], messages: [], documents: [], chunks: [] };
+  return { seq: { conv: 0, msg: 0, doc: 0, chunk: 0, user: 0 }, conversations: [], messages: [], documents: [], chunks: [], users: [] };
 }
 
 function loadJson() {
   try {
     fs.mkdirSync(config.dataDir, { recursive: true });
-    if (fs.existsSync(file)) mem = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (fs.existsSync(file)) {
+      mem = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (!mem.users) mem.users = [];
+      if (!mem.seq) mem.seq = {};
+      if (!mem.seq.user) mem.seq.user = 0;
+    }
   } catch (e) {
     console.warn('[STORE] 读取本地 JSON 失败，使用空数据：', e.message);
     mem = emptyState();
@@ -245,9 +250,51 @@ async function getChunksByDoc(docId) {
   return mem.chunks.filter((c) => c.doc_id === Number(docId)).sort((a, b) => a.seq - b.seq);
 }
 
+/* ---------------- 用户 ---------------- */
+async function findUser(username, email) {
+  if (useMySQL) {
+    const [rows] = await pool.query(
+      'SELECT id, username, email, password_hash, created_at, last_login_at FROM users WHERE username = ? OR email = ? LIMIT 1',
+      [username, email]
+    );
+    return rows[0] || null;
+  }
+  return mem.users.find((u) => u.username === username || (email && u.email === email)) || null;
+}
+
+async function findUserById(id) {
+  if (useMySQL) {
+    const [rows] = await pool.query('SELECT id, username, email, created_at, last_login_at FROM users WHERE id = ?', [id]);
+    return rows[0] || null;
+  }
+  return mem.users.find((u) => u.id === Number(id)) || null;
+}
+
+async function createUser(username, email, passwordHash) {
+  if (useMySQL) {
+    const [r] = await pool.query('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [username, email, passwordHash]);
+    const [rows] = await pool.query('SELECT id, username, email, created_at FROM users WHERE id = ?', [r.insertId]);
+    return rows[0];
+  }
+  const rec = { id: nextId('user'), username, email, password_hash: passwordHash, created_at: now(), last_login_at: null };
+  mem.users.push(rec);
+  saveJson();
+  return { id: rec.id, username, email, created_at: rec.created_at };
+}
+
+async function updateLastLogin(id) {
+  if (useMySQL) { await pool.query('UPDATE users SET last_login_at = NOW() WHERE id = ?', [id]); return; }
+  const u = mem.users.find((x) => x.id === Number(id));
+  if (u) { u.last_login_at = now(); saveJson(); }
+}
+
 module.exports = {
   init,
   isMySQL: () => useMySQL,
+  findUser,
+  findUserById,
+  createUser,
+  updateLastLogin,
   listConversations,
   createConversation,
   renameConversation,

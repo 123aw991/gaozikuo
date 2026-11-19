@@ -6,6 +6,17 @@
 CREATE DATABASE IF NOT EXISTS `llm_rag` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `llm_rag`;
 
+-- 用户表（登录/注册）
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id`            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `username`      VARCHAR(50)  NOT NULL UNIQUE,
+  `email`         VARCHAR(120) NOT NULL UNIQUE,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `created_at`    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `last_login_at` DATETIME DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 会话表
 DROP TABLE IF EXISTS `conversations`;
 CREATE TABLE `conversations` (

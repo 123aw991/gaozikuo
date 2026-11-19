@@ -15,6 +15,16 @@
 
 ## 2. 表结构
 
+### 2.0 users（用户表）
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | BIGINT PK AUTO_INCREMENT | 用户 ID |
+| username | VARCHAR(50) UNIQUE | 用户名 |
+| email | VARCHAR(120) UNIQUE | 邮箱 |
+| password_hash | VARCHAR(255) | scrypt 加盐哈希（格式 `scrypt$salt$hash`） |
+| created_at | DATETIME | 注册时间 |
+| last_login_at | DATETIME | 最后登录时间 |
+
 ### 2.1 conversations（会话表）
 | 字段 | 类型 | 说明 |
 |---|---|---|

@@ -31,9 +31,23 @@ const API = (function () {
     console.log('  Data:', data);
   }
 
+  /* 登录态：Token 存 localStorage，所有请求自动携带 Authorization */
+  const TOKEN_KEY = 'llmapp_token';
+  const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
+  const setToken = (t) => { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } };
+  const getUser = () => { try { return JSON.parse(localStorage.getItem('llmapp_user') || 'null'); } catch (e) { return null; } };
+  const setUser = (u) => { try { u ? localStorage.setItem('llmapp_user', JSON.stringify(u)) : localStorage.removeItem('llmapp_user'); } catch (e) { /* ignore */ } };
+
+  function authHeaders(base) {
+    const h = Object.assign({}, base || {});
+    const t = getToken();
+    if (t) h.Authorization = 'Bearer ' + t;
+    return h;
+  }
+
   async function json(method, path, obj) {
     const url = BASE + path;
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = authHeaders({ 'Content-Type': 'application/json' });
     logReq(method, url, headers, obj);
     const r = await fetch(url, { method, headers, body: obj ? JSON.stringify(obj) : undefined });
     const data = await r.json().catch(() => ({}));
@@ -52,6 +66,8 @@ const API = (function () {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', url);
+      const t = getToken();
+      if (t) xhr.setRequestHeader('Authorization', 'Bearer ' + t);
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
       };
@@ -69,7 +85,7 @@ const API = (function () {
   /* SSE 流式调用，handlers: onMeta / onDelta / onDone / onError / onClose */
   async function sse(path, obj, handlers) {
     const url = BASE + path;
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = authHeaders({ 'Content-Type': 'application/json' });
     logReq('POST', url, headers, obj);
 
     const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(obj) });
@@ -111,5 +127,5 @@ const API = (function () {
     handlers.onClose && handlers.onClose();
   }
 
-  return { BASE, json, upload, sse };
+  return { BASE, json, upload, sse, getToken, setToken, getUser, setUser };
 })();

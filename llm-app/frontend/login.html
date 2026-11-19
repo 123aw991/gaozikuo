@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>登录 · LLM 应用设计实验</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/auth.css" />
+</head>
+<body class="auth-body">
+<div class="auth-bg"><span></span><span></span><span></span></div>
+
+<main class="auth-card">
+  <div class="auth-head">
+    <div class="auth-logo">⌘</div>
+    <h1>欢迎回来</h1>
+    <p>登录以使用智能问答、知识库与多模态识别功能</p>
+  </div>
+
+  <form id="loginForm" class="auth-form" novalidate>
+    <div class="form-item">
+      <label for="account">用户名 / 邮箱</label>
+      <div class="input-wrap"><span class="ico">👤</span><input id="account" name="account" type="text" placeholder="请输入用户名或邮箱" autocomplete="username" /></div>
+    </div>
+    <div class="form-item">
+      <label for="password">密码</label>
+      <div class="input-wrap"><span class="ico">🔒</span><input id="password" name="password" type="password" placeholder="请输入密码（至少 6 位）" autocomplete="current-password" /><button type="button" class="eye" id="togglePwd">显示</button></div>
+    </div>
+    <div class="err-msg" id="errMsg"></div>
+    <button type="submit" class="btn primary auth-submit" id="submitBtn">登录</button>
+  </form>
+
+  <div class="auth-foot">
+    <span>还没有账号？<a href="register.html">立即注册</a></span>
+    <a href="index.html">← 返回门户</a>
+  </div>
+  <div class="auth-tip">账号信息保存在本地服务；请求/响应报文可在 Console（F12）查看</div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

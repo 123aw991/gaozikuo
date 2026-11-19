@@ -10,6 +10,7 @@
 
 | 模块 | 说明 |
 |---|---|
+| 登录 / 注册 | 用户注册与登录（scrypt 加盐哈希、HMAC 签名 Token、邮箱/用户名校验），门户显示登录状态，支持退出；MySQL/JSON 双存储 |
 | 智能问答 | 基于本地知识库的流式问答；会话管理（新建/重命名/删除/历史加载）；RAG 检索开关；引用来源溯源 |
 | **AI 生图与语音识别** | 文生图默认 `Kwai-Kolors/Kolors`（硅基流动 `/images/generations`，约 5 秒出图；可在 `.env` 切 `OpenMOSS-Team/MOSS-Image`）；语音识别用 `FunAudioLLM/SenseVoiceSmall`（`/audio/transcriptions`，Qwen 多模态可切换）+ 浏览器实时录音；转写文本可整理摘要/关键词/意图；生成的图片自动保存到本地 `/generated/` |
 | **商业评论情感分类** | 上传 Excel（.xlsx/.xls），LLM 逐条判断好评/中评/差评；前端饼状图展示分布、精选评论、完整明细；大模型收发报文在服务端终端与浏览器控制台打印；附 3 份各 20 条的模拟数据 |
@@ -33,7 +34,8 @@ llm-app/
 │  │  ├─ conversations.js    # /api/conversations 会话增删改查 + 消息
 │  │  ├─ kb.js               # /api/kb 文档上传/列表/删除/分块/检索/统计
 │  │  ├─ sentiment.js        # /api/sentiment Excel 解析 + LLM 情感分类 + 兜底降级
-│  │  └─ recognition.js      # /api/recognition 生图（OpenMOSS）/ 语音识别（SenseVoice）/ 文本整理
+│  │  ├─ recognition.js      # /api/recognition 生图（OpenMOSS）/ 语音识别（SenseVoice）/ 文本整理
+│  │  └─ auth.js             # /api/auth 注册/登录/当前用户/登出（scrypt + HMAC Token）
 │  ├─ services/
 │  │  ├─ store.js            # 存储抽象：MySQL 或本地 JSON（运行时切换）
 │  │  ├─ parser.js           # 文件解析：txt/md/pdf/doc/docx/ppt/pptx/csv/json
@@ -46,7 +48,8 @@ llm-app/
 │     └─ gen-samples.js      # 生成 3 份各 20 条评论的 Excel 模拟数据
 ├─ samples/                  # 3 份模拟数据（餐饮/数码/电商，各 20 条评论）
 └─ frontend/                 # 原生前端（无第三方依赖）
-   ├─ index.html             # 门户：项目说明、架构、服务状态
+   ├─ index.html             # 门户：项目说明、架构、服务状态、登录状态栏
+   ├─ login.html + register.html + js/auth.js + css/auth.css  # 登录 / 注册页
    ├─ chat.html + js/chat.js  # 智能问答页
    ├─ kb.html + js/kb.js      # 知识库管理页
    ├─ sentiment.html + js/sentiment.js  # 商业评论情感分类页（饼图 + 精选评论）

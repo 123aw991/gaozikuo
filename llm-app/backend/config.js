@@ -26,6 +26,10 @@ module.exports = {
     speechModel: process.env.SF_SPEECH_MODEL || 'Qwen/Qwen2.5-Omni-7B',
     timeout: num(process.env.SF_TIMEOUT, 120000)
   },
+  auth: {
+    secret: process.env.AUTH_SECRET || 'llm-app-dev-secret-change-me',
+    tokenHours: num(process.env.AUTH_TOKEN_HOURS, 72)
+  },
   db: {
     enabled: String(process.env.DB_ENABLED || 'false').toLowerCase() === 'true',
     host: process.env.DB_HOST || '127.0.0.1',

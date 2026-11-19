@@ -20,6 +20,11 @@
     <span class="dot"></span><span id="healthText">正在检测服务状态…</span>
   </div>
 
+  <div class="auth-bar" id="authBar">
+    <span id="authWelcome">正在检查登录状态…</span>
+    <span class="auth-actions" id="authActions"></span>
+  </div>
+
   <div class="cards">
     <a class="pcard" href="chat.html">
       <div class="pic">💬</div>
@@ -83,7 +88,30 @@
   </div>
 </main>
 
+<script src="js/api.js"></script>
 <script>
+  /* 登录状态 */
+  (function () {
+    var welcome = document.getElementById('authWelcome');
+    var actions = document.getElementById('authActions');
+    var user = API.getUser();
+    if (user && API.getToken()) {
+      welcome.innerHTML = '👤 已登录：<b style="color:#9fe8dd">' + String(user.username).replace(/</g, '&lt;') + '</b>';
+      actions.innerHTML = '<button class="btn" id="logoutBtn">退出登录</button>';
+      document.getElementById('logoutBtn').addEventListener('click', async function () {
+        await API.json('POST', '/api/auth/logout', {});
+        API.setToken(''); API.setUser(''); location.reload();
+      });
+      // 校验 Token 是否仍有效
+      API.json('GET', '/api/auth/me').then(function (d) {
+        if (d.code !== 0) { API.setToken(''); API.setUser(''); location.reload(); }
+      });
+    } else {
+      welcome.textContent = '🔐 未登录（登录后可体验完整功能）';
+      actions.innerHTML = '<a class="btn" href="login.html">登录</a><a class="btn primary" href="register.html">注册</a>';
+    }
+  })();
+
   fetch('api/health').then(function (r) { return r.json(); }).then(function (d) {
     var box = document.getElementById('health');
     if (d && d.code === 0) {
